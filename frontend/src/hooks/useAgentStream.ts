@@ -40,8 +40,11 @@ export function useAgentStream(tripId: string) {
 
         case 'state_update':
           if (event.data) {
+            console.log('[WS] state_update keys:', Object.keys(event.data));
             if (event.data.itinerary) {
-              setItinerary(event.data.itinerary as DayPlan[]);
+              const days = Array.isArray(event.data.itinerary) ? event.data.itinerary : [];
+              console.log('[WS] state_update itinerary, days:', days.length);
+              setItinerary(days as DayPlan[]);
             }
             if (event.data.destination_info) {
               setDestinationInfo(event.data.destination_info as string);
@@ -52,8 +55,13 @@ export function useAgentStream(tripId: string) {
         case 'complete':
           setIsStreaming(false);
           setCurrentPhase('complete');
+          console.log('[WS] complete event data:', JSON.stringify(event.data).slice(0, 500));
           if (event.data?.itinerary) {
-            setItinerary(event.data.itinerary as DayPlan[]);
+            const days = Array.isArray(event.data.itinerary) ? event.data.itinerary : [];
+            console.log('[WS] Setting itinerary, days count:', days.length);
+            setItinerary(days as DayPlan[]);
+          } else {
+            console.warn('[WS] complete event has no itinerary data');
           }
           if (event.data?.destination_info) {
             setDestinationInfo(event.data.destination_info as string);
