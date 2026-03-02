@@ -1,8 +1,9 @@
 import json
 import traceback
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 
+from ..services.auth_service import decode_jwt
 from ..services.trip_service import get_trip_by_id
 from ..services.agent_service import run_agent_stream
 
@@ -10,10 +11,24 @@ router = APIRouter()
 
 
 @router.websocket("/ws/trips/{trip_id}/chat")
-async def trip_chat(websocket: WebSocket, trip_id: str):
+async def trip_chat(websocket: WebSocket, trip_id: str, token: str = Query(default="")):
     await websocket.accept()
 
-    trip = await get_trip_by_id(trip_id)
+    # Validate auth token
+    if not token:
+        await websocket.send_json({"type": "error", "content": "Authentication required"})
+        await websocket.close()
+        return
+
+    try:
+        payload = decode_jwt(token)
+        user_id = payload.get("sub")
+    except Exception:
+        await websocket.send_json({"type": "error", "content": "Invalid token"})
+        await websocket.close()
+        return
+
+    trip = await get_trip_by_id(trip_id, user_id)
     if not trip:
         await websocket.send_json({"type": "error", "content": "Trip not found"})
         await websocket.close()

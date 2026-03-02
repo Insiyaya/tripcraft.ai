@@ -13,3 +13,6 @@ geopy
 python-dotenv
 websockets
 aiohttp
+PyJWT
+google-auth
+requests

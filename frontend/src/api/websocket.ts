@@ -22,6 +22,11 @@ export class WebSocketManager {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       url = `${protocol}//${window.location.host}/ws/trips/${this.tripId}/chat`;
     }
+    // Attach auth token as query param
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      url += `?token=${encodeURIComponent(token)}`;
+    }
     this.ws = new WebSocket(url);
 
     this.ws.onmessage = (event) => {

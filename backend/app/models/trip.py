@@ -39,6 +39,7 @@ class TripUpdate(BaseModel):
 
 class TripResponse(BaseModel):
     id: str = Field(alias="_id")
+    user_id: str = ""
     destination: str
     start_date: str
     end_date: str

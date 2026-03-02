@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import connect_db, close_db
-from .routers import health, trips, itinerary, chat
+from .routers import health, trips, itinerary, chat, auth
 
 
 @asynccontextmanager
@@ -40,6 +40,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(trips.router, prefix="/api", tags=["trips"])
 app.include_router(itinerary.router, prefix="/api", tags=["itinerary"])
