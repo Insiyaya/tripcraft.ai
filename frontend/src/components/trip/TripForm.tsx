@@ -33,8 +33,13 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
   const [interests, setInterests] = useState<string[]>([]);
   const [accommodation, setAccommodation] = useState('');
 
+  // Today's date as YYYY-MM-DD for min date validation
+  const today = new Date().toISOString().split('T')[0];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (startDate < today) return;
+    if (endDate <= startDate) return;
     onSubmit({
       destination,
       start_date: startDate,
@@ -73,7 +78,11 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
           <input
             type="date"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(e) => {
+              setStartDate(e.target.value);
+              if (endDate && e.target.value >= endDate) setEndDate('');
+            }}
+            min={today}
             required
             className={inputClass}
             style={inputStyle}
@@ -84,6 +93,7 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
+            min={startDate || today}
             required
             className={inputClass}
             style={inputStyle}
@@ -140,7 +150,7 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
 
       <motion.button
         type="submit"
-        disabled={isLoading || !destination || !startDate || !endDate}
+        disabled={isLoading || !destination || !startDate || !endDate || endDate <= startDate}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className="w-full gradient-primary text-white py-2.5 rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-opacity shadow-md"

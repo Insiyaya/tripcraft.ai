@@ -20,6 +20,14 @@ export default function PlannerPage() {
   const [formCollapsed, setFormCollapsed] = useState(!!tripId);
   const [autoGenerate, setAutoGenerate] = useState(false);
 
+  // Sync activeTripId when URL changes (navigating between trips)
+  useEffect(() => {
+    if (tripId && tripId !== activeTripId) {
+      setActiveTripId(tripId);
+      setFormCollapsed(true);
+    }
+  }, [tripId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const { data: trip } = useTrip(activeTripId || undefined);
   const createMutation = useCreateTrip();
   const { itinerary, destinationInfo, isStreaming, currentPhase } = useChatStore();
@@ -27,26 +35,39 @@ export default function PlannerPage() {
   const setChatOpen = useUIStore((s) => s.setChatOpen);
 
   const { generate, sendMessage, disconnect } = useAgentStream(activeTripId);
+  const reset = useChatStore((s) => s.reset);
+  const setItinerary = useChatStore((s) => s.setItinerary);
+  const setDestinationInfo = useChatStore((s) => s.setDestinationInfo);
 
   useEffect(() => {
     return () => disconnect();
   }, [disconnect]);
 
-  // Fetch itinerary from API on page load (for existing trips) and after generation
-  const { setItinerary: storeSetItinerary, setDestinationInfo: storeSetDestInfo } = useChatStore();
+  // Reset chat state and load saved itinerary when trip changes
   useEffect(() => {
     if (!activeTripId) return;
+    reset();
     fetchItinerary(activeTripId)
       .then((data) => {
-        if (data?.days?.length) {
-          storeSetItinerary(data.days);
-        }
-        if (data?.destination_info) {
-          storeSetDestInfo(data.destination_info);
-        }
+        if (data?.days?.length) setItinerary(data.days);
+        if (data?.destination_info) setDestinationInfo(data.destination_info);
       })
       .catch(() => {});
-  }, [activeTripId, currentPhase, storeSetItinerary, storeSetDestInfo]);
+  }, [activeTripId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch from DB when generation completes
+  useEffect(() => {
+    if (currentPhase !== 'complete' || !activeTripId) return;
+    const timer = setTimeout(() => {
+      fetchItinerary(activeTripId)
+        .then((data) => {
+          if (data?.days?.length) setItinerary(data.days);
+          if (data?.destination_info) setDestinationInfo(data.destination_info);
+        })
+        .catch(() => {});
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentPhase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hasGenerated = useRef(false);
   useEffect(() => {
