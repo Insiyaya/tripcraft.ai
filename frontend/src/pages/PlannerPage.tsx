@@ -11,6 +11,7 @@ import { useTrip, useCreateTrip } from '../hooks/useTrips';
 import { useAgentStream } from '../hooks/useAgentStream';
 import { useChatStore } from '../store/chatStore';
 import { useUIStore } from '../store/uiStore';
+import { fetchItinerary } from '../api/trips';
 import type { TripCreate } from '../types/trip';
 
 export default function PlannerPage() {
@@ -30,6 +31,22 @@ export default function PlannerPage() {
   useEffect(() => {
     return () => disconnect();
   }, [disconnect]);
+
+  // Fetch itinerary from API on page load (for existing trips) and after generation
+  const { setItinerary: storeSetItinerary, setDestinationInfo: storeSetDestInfo } = useChatStore();
+  useEffect(() => {
+    if (!activeTripId) return;
+    fetchItinerary(activeTripId)
+      .then((data) => {
+        if (data?.days?.length) {
+          storeSetItinerary(data.days);
+        }
+        if (data?.destination_info) {
+          storeSetDestInfo(data.destination_info);
+        }
+      })
+      .catch(() => {});
+  }, [activeTripId, currentPhase, storeSetItinerary, storeSetDestInfo]);
 
   const hasGenerated = useRef(false);
   useEffect(() => {
