@@ -1,22 +1,37 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { motion } from 'framer-motion';
 import { Plane } from 'lucide-react';
+import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { googleLogin } from '../api/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSuccess = async (credentialResponse: { credential?: string }) => {
     if (!credentialResponse.credential) return;
+    setErrorMessage('');
     try {
       const data = await googleLogin(credentialResponse.credential);
       setAuth(data.user, data.access_token);
       navigate('/trips');
     } catch (err) {
       console.error('Login failed:', err);
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          setErrorMessage('Google token rejected. Verify GOOGLE_CLIENT_ID is the same in Vercel and Render.');
+          return;
+        }
+        if (!err.response) {
+          setErrorMessage('Temporary network/CORS issue. Please try again in a few seconds.');
+          return;
+        }
+      }
+      setErrorMessage('Sign-in failed. Please try again.');
     }
   };
 
@@ -52,13 +67,22 @@ export default function LoginPage() {
         <div className="flex justify-center">
           <GoogleLogin
             onSuccess={handleSuccess}
-            onError={() => console.error('Google login error')}
+            onError={() => {
+              console.error('Google login error');
+              setErrorMessage('Google sign-in popup failed. Please retry.');
+            }}
             theme="outline"
             size="large"
             shape="pill"
             width="280"
           />
         </div>
+
+        {errorMessage && (
+          <p className="text-xs mt-4 text-red-500">
+            {errorMessage}
+          </p>
+        )}
 
         <p className="text-xs mt-6" style={{ color: 'var(--color-text-muted)' }}>
           By signing in, you agree to let us store your trip data.

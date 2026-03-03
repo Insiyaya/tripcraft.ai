@@ -13,6 +13,7 @@ import { useChatStore } from '../store/chatStore';
 import { useUIStore } from '../store/uiStore';
 import { fetchItinerary } from '../api/trips';
 import type { TripCreate } from '../types/trip';
+import { normalizeItinerary } from '../utils/itineraryNormalizer';
 
 export default function PlannerPage() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -50,10 +51,11 @@ export default function PlannerPage() {
   useEffect(() => {
     if (!activeTripId) return;
     reset();
+    setSelectedDay(null);
     fetchItinerary(activeTripId)
       .then((data) => {
-        if (data?.days?.length) setItinerary(data.days);
-        if (data?.destination_info) setDestinationInfo(data.destination_info);
+        setItinerary(normalizeItinerary(data?.days));
+        setDestinationInfo(typeof data?.destination_info === 'string' ? data.destination_info : '');
       })
       .catch(() => {});
   }, [activeTripId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -64,8 +66,8 @@ export default function PlannerPage() {
     const timer = setTimeout(() => {
       fetchItinerary(activeTripId)
         .then((data) => {
-          if (data?.days?.length) setItinerary(data.days);
-          if (data?.destination_info) setDestinationInfo(data.destination_info);
+          setItinerary(normalizeItinerary(data?.days));
+          setDestinationInfo(typeof data?.destination_info === 'string' ? data.destination_info : '');
         })
         .catch(() => {});
     }, 500);

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Fragment, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { DayPlan } from '../../types/itinerary';
@@ -10,7 +10,9 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+type DefaultIconPrototype = { _getIconUrl?: string };
+
+delete (L.Icon.Default.prototype as DefaultIconPrototype)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
@@ -21,6 +23,19 @@ const TILE_URLS = {
   light: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
   dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
 };
+
+function parseCoordinate(value: unknown): number | null {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toLatLng(lat: unknown, lng: unknown): [number, number] | null {
+  const safeLat = parseCoordinate(lat);
+  const safeLng = parseCoordinate(lng);
+  if (safeLat === null || safeLng === null) return null;
+  if (safeLat < -90 || safeLat > 90 || safeLng < -180 || safeLng > 180) return null;
+  return [safeLat, safeLng];
+}
 
 function createNumberedIcon(number: number, color: string) {
   return L.divIcon({
@@ -50,8 +65,9 @@ function FitBounds({ days }: { days: DayPlan[] }) {
   useEffect(() => {
     const allCoords: [number, number][] = [];
     days.forEach((day) => {
-      day.activities.forEach((a) => {
-        if (a.lat && a.lng) allCoords.push([a.lat, a.lng]);
+      day.activities.forEach((activity) => {
+        const coords = toLatLng(activity.lat, activity.lng);
+        if (coords) allCoords.push(coords);
       });
     });
     if (allCoords.length > 0) {
@@ -93,7 +109,9 @@ export default function TripMap({ itinerary }: Props) {
   const setSelectedActivity = useUIStore((s) => s.setSelectedActivity);
 
   const daysToShow =
-    selectedDay !== null ? [itinerary[selectedDay]] : itinerary;
+    selectedDay !== null && selectedDay >= 0 && selectedDay < itinerary.length
+      ? [itinerary[selectedDay]]
+      : itinerary;
 
   return (
     <MapContainer
@@ -107,11 +125,11 @@ export default function TripMap({ itinerary }: Props) {
       {daysToShow.map((day) => {
         const color = DAY_COLORS[(day.day_number - 1) % DAY_COLORS.length];
         const positions = day.activities
-          .filter((a) => a.lat && a.lng)
-          .map((a) => [a.lat, a.lng] as [number, number]);
+          .map((activity) => toLatLng(activity.lat, activity.lng))
+          .filter((coords): coords is [number, number] => coords !== null);
 
         return (
-          <span key={day.day_number}>
+          <Fragment key={day.day_number}>
             {positions.length > 1 && (
               <Polyline
                 positions={positions}
@@ -119,32 +137,36 @@ export default function TripMap({ itinerary }: Props) {
               />
             )}
             {day.activities.map((activity, actIdx) =>
-              activity.lat && activity.lng ? (
-                <Marker
-                  key={`${day.day_number}-${actIdx}`}
-                  position={[activity.lat, activity.lng]}
-                  icon={createNumberedIcon(actIdx + 1, color)}
-                  eventHandlers={{
-                    click: () =>
-                      setSelectedActivity({
-                        dayIdx: day.day_number - 1,
-                        actIdx,
-                      }),
-                  }}
-                >
-                  <Popup>
-                    <div className="text-sm">
-                      <strong>{activity.name}</strong>
-                      <br />
-                      {activity.start_time} - {activity.end_time}
-                      <br />
-                      {activity.category} | ${activity.cost_estimate_usd}
-                    </div>
-                  </Popup>
-                </Marker>
-              ) : null
+              (() => {
+                const coords = toLatLng(activity.lat, activity.lng);
+                if (!coords) return null;
+                return (
+                  <Marker
+                    key={`${day.day_number}-${actIdx}`}
+                    position={coords}
+                    icon={createNumberedIcon(actIdx + 1, color)}
+                    eventHandlers={{
+                      click: () =>
+                        setSelectedActivity({
+                          dayIdx: day.day_number - 1,
+                          actIdx,
+                        }),
+                    }}
+                  >
+                    <Popup>
+                      <div className="text-sm">
+                        <strong>{activity.name}</strong>
+                        <br />
+                        {activity.start_time} - {activity.end_time}
+                        <br />
+                        {activity.category} | ${activity.cost_estimate_usd}
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })()
             )}
-          </span>
+          </Fragment>
         );
       })}
     </MapContainer>

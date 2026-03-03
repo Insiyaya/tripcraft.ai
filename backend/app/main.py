@@ -26,10 +26,16 @@ cors_origins = [
     "http://localhost:5173",
     "http://localhost:3000",
 ]
-# Add production frontend URL if set
-frontend_url = os.getenv("FRONTEND_URL", "")
+# Add production frontend URLs if set (supports single FRONTEND_URL or comma-separated FRONTEND_URLS)
+frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
 if frontend_url:
     cors_origins.append(frontend_url)
+
+frontend_urls = os.getenv("FRONTEND_URLS", "")
+for url in frontend_urls.split(","):
+    clean_url = url.strip().rstrip("/")
+    if clean_url:
+        cors_origins.append(clean_url)
 
 app.add_middleware(
     CORSMiddleware,

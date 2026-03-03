@@ -1,4 +1,5 @@
 import api from './client';
+import axios from 'axios';
 
 interface AuthResponse {
   access_token: string;
@@ -17,13 +18,33 @@ interface MeResponse {
   picture?: string;
 }
 
+const RETRY_DELAYS_MS = [600, 1200];
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function googleLogin(credential: string): Promise<AuthResponse> {
-  const { data } = await api.post('/auth/google', { credential });
-  // Map _id to id if needed
-  if (data.user._id && !data.user.id) {
-    data.user.id = data.user._id;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const { data } = await api.post('/auth/google', { credential });
+      // Map _id to id if needed
+      if (data.user._id && !data.user.id) {
+        data.user.id = data.user._id;
+      }
+      return data;
+    } catch (error) {
+      lastError = error;
+      const isAxiosError = axios.isAxiosError(error);
+      const isTransient = isAxiosError && !error.response;
+      const hasRetry = attempt < RETRY_DELAYS_MS.length;
+
+      if (!isTransient || !hasRetry) break;
+      await sleep(RETRY_DELAYS_MS[attempt]);
+    }
   }
-  return data;
+
+  throw lastError;
 }
 
 export async function fetchMe(): Promise<MeResponse> {

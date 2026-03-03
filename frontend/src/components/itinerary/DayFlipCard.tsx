@@ -15,6 +15,8 @@ interface Props {
 export default function DayFlipCard({ day, index, onViewOnMap }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
   const color = DAY_COLORS[index % DAY_COLORS.length];
+  const activities = Array.isArray(day.activities) ? day.activities : [];
+  const travelTimes = Array.isArray(day.travel_times_min) ? day.travel_times_min : [];
 
   return (
     <div
@@ -66,15 +68,15 @@ export default function DayFlipCard({ day, index, onViewOnMap }: Props) {
             <div className="mt-auto space-y-2.5">
               <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                 <MapPin className="w-4 h-4" style={{ color }} />
-                <span>{day.activities.length} activities</span>
+                <span>{activities.length} activities</span>
               </div>
 
               <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                 <Clock className="w-4 h-4" style={{ color }} />
                 <span>
-                  {day.activities.length > 0 && day.activities[0].start_time
-                    ? `${day.activities[0].start_time} - ${day.activities[day.activities.length - 1].end_time}`
-                    : formatDuration(day.activities.reduce((s, a) => s + a.estimated_duration_hrs, 0))}
+                  {activities.length > 0 && activities[0].start_time
+                    ? `${activities[0].start_time} - ${activities[activities.length - 1].end_time}`
+                    : formatDuration(activities.reduce((sum, activity) => sum + activity.estimated_duration_hrs, 0))}
                 </span>
               </div>
 
@@ -127,16 +129,16 @@ export default function DayFlipCard({ day, index, onViewOnMap }: Props) {
               style={{ WebkitOverflowScrolling: 'touch' }}
               onClick={(e) => e.stopPropagation()}
             >
-              {day.activities.map((activity, actIdx) => (
+              {activities.map((activity, actIdx) => (
                 <div key={actIdx}>
                   <ActivityCard
                     activity={activity}
                     index={actIdx + 1}
                     color={color}
                   />
-                  {actIdx < day.activities.length - 1 && day.travel_times_min?.[actIdx] && (
+                  {actIdx < activities.length - 1 && travelTimes[actIdx] && (
                     <div className="flex items-center justify-center py-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                      {day.travel_times_min[actIdx]} min travel
+                      {travelTimes[actIdx]} min travel
                     </div>
                   )}
                 </div>

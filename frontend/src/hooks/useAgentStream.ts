@@ -1,8 +1,8 @@
 import { useCallback, useRef } from 'react';
 import { WebSocketManager } from '../api/websocket';
 import { useChatStore } from '../store/chatStore';
-import type { StreamEvent } from '../types/chat';
-import type { DayPlan } from '../types/itinerary';
+import type { AgentPhase, StreamEvent } from '../types/chat';
+import { normalizeItinerary } from '../utils/itineraryNormalizer';
 
 export function useAgentStream(tripId: string) {
   const wsRef = useRef<WebSocketManager | null>(null);
@@ -23,7 +23,7 @@ export function useAgentStream(tripId: string) {
     (event: StreamEvent) => {
       switch (event.type) {
         case 'node_start':
-          setCurrentPhase(event.node as any);
+          setCurrentPhase((event.node || 'idle') as AgentPhase);
           setIsStreaming(true);
           addMessage({
             role: 'system',
@@ -42,9 +42,9 @@ export function useAgentStream(tripId: string) {
           if (event.data) {
             console.log('[WS] state_update keys:', Object.keys(event.data));
             if (event.data.itinerary) {
-              const days = Array.isArray(event.data.itinerary) ? event.data.itinerary : [];
+              const days = normalizeItinerary(event.data.itinerary);
               console.log('[WS] state_update itinerary, days:', days.length);
-              setItinerary(days as DayPlan[]);
+              setItinerary(days);
             }
             if (event.data.destination_info) {
               setDestinationInfo(event.data.destination_info as string);
@@ -57,9 +57,9 @@ export function useAgentStream(tripId: string) {
           setCurrentPhase('complete');
           console.log('[WS] complete event data:', JSON.stringify(event.data).slice(0, 500));
           if (event.data?.itinerary) {
-            const days = Array.isArray(event.data.itinerary) ? event.data.itinerary : [];
+            const days = normalizeItinerary(event.data.itinerary);
             console.log('[WS] Setting itinerary, days count:', days.length);
-            setItinerary(days as DayPlan[]);
+            setItinerary(days);
           } else {
             console.warn('[WS] complete event has no itinerary data');
           }

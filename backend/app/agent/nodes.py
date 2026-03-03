@@ -224,10 +224,22 @@ async def plan_itinerary(state: TripState) -> dict:
                 logger.warning("No 'days' key found. Keys: %s", list(data.keys()) if isinstance(data, dict) else type(data))
 
         # Calculate travel times between activities using haversine
-        for day in days:
+        for idx, day in enumerate(days):
+            if not isinstance(day, dict):
+                day = {}
+                days[idx] = day
+
             activities = day.get("activities", [])
-            # Ensure all activities have lat/lng with defaults
+            if not isinstance(activities, list):
+                activities = []
+            normalized_activities = []
+
+            # Ensure all activities have expected keys with safe defaults.
             for act in activities:
+                if not isinstance(act, dict):
+                    continue
+                act.setdefault("name", "Untitled activity")
+                act.setdefault("category", "landmark")
                 act.setdefault("lat", 0.0)
                 act.setdefault("lng", 0.0)
                 act.setdefault("cost_estimate_usd", 0)
@@ -237,9 +249,14 @@ async def plan_itinerary(state: TripState) -> dict:
                 act.setdefault("description", "")
                 act.setdefault("start_time", "")
                 act.setdefault("end_time", "")
+                normalized_activities.append(act)
+
+            day["day_number"] = day.get("day_number", idx + 1)
+            day["date"] = day.get("date", "")
+            day["activities"] = normalized_activities
             travel_times = []
-            for i in range(len(activities) - 1):
-                a1, a2 = activities[i], activities[i + 1]
+            for i in range(len(normalized_activities) - 1):
+                a1, a2 = normalized_activities[i], normalized_activities[i + 1]
                 if a1["lat"] and a1["lng"] and a2["lat"] and a2["lng"]:
                     t = estimate_travel_time_min(a1["lat"], a1["lng"], a2["lat"], a2["lng"])
                 else:
@@ -247,7 +264,7 @@ async def plan_itinerary(state: TripState) -> dict:
                 travel_times.append(t)
             day["travel_times_min"] = travel_times
             day.setdefault("total_cost_usd", sum(
-                float(a.get("cost_estimate_usd", 0) or 0) for a in activities
+                float(a.get("cost_estimate_usd", 0) or 0) for a in normalized_activities
             ))
             day.setdefault("weather_summary", "")
 
@@ -309,20 +326,45 @@ async def optimize_route(state: TripState) -> dict:
         days = data.get("days", state.get("itinerary", []))
 
         # Recalculate travel times after optimization
-        for day in days:
+        for idx, day in enumerate(days):
+            if not isinstance(day, dict):
+                day = {}
+                days[idx] = day
             activities = day.get("activities", [])
+            if not isinstance(activities, list):
+                activities = []
+            normalized_activities = []
             for act in activities:
+                if not isinstance(act, dict):
+                    continue
+                act.setdefault("name", "Untitled activity")
+                act.setdefault("category", "landmark")
                 act.setdefault("lat", 0.0)
                 act.setdefault("lng", 0.0)
+                act.setdefault("cost_estimate_usd", 0)
+                act.setdefault("estimated_duration_hrs", 1)
+                act.setdefault("rating", 0)
+                act.setdefault("opening_hours", "")
+                act.setdefault("description", "")
+                act.setdefault("start_time", "")
+                act.setdefault("end_time", "")
+                normalized_activities.append(act)
+            day["day_number"] = day.get("day_number", idx + 1)
+            day["date"] = day.get("date", "")
+            day["activities"] = normalized_activities
             travel_times = []
-            for i in range(len(activities) - 1):
-                a1, a2 = activities[i], activities[i + 1]
+            for i in range(len(normalized_activities) - 1):
+                a1, a2 = normalized_activities[i], normalized_activities[i + 1]
                 if a1.get("lat") and a1.get("lng") and a2.get("lat") and a2.get("lng"):
                     t = estimate_travel_time_min(a1["lat"], a1["lng"], a2["lat"], a2["lng"])
                 else:
                     t = 15
                 travel_times.append(t)
             day["travel_times_min"] = travel_times
+            day.setdefault("total_cost_usd", sum(
+                float(a.get("cost_estimate_usd", 0) or 0) for a in normalized_activities
+            ))
+            day.setdefault("weather_summary", "")
 
         return {
             "itinerary": days,

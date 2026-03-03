@@ -34,7 +34,10 @@ export default function ItineraryFlipGrid({ itinerary, destinationInfo, onViewDa
   }
 
   const totalCost = itinerary.reduce((sum, d) => sum + (d.total_cost_usd || 0), 0);
-  const totalActivities = itinerary.reduce((sum, d) => sum + d.activities.length, 0);
+  const totalActivities = itinerary.reduce((sum, day) => {
+    const activities = Array.isArray(day.activities) ? day.activities : [];
+    return sum + activities.length;
+  }, 0);
 
   return (
     <div className="h-full overflow-y-auto px-6 py-6">
