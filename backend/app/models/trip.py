@@ -18,6 +18,7 @@ class PyObjectId(str):
 
 
 class TripCreate(BaseModel):
+    origin: str = ""
     destination: str
     start_date: str
     end_date: str
@@ -28,6 +29,7 @@ class TripCreate(BaseModel):
 
 
 class TripUpdate(BaseModel):
+    origin: Optional[str] = None
     destination: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
@@ -40,6 +42,7 @@ class TripUpdate(BaseModel):
 class TripResponse(BaseModel):
     id: str = Field(alias="_id")
     user_id: str = ""
+    origin: str = ""
     destination: str
     start_date: str
     end_date: str

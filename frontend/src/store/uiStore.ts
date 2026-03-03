@@ -5,11 +5,13 @@ type Theme = 'light' | 'dark' | 'system';
 interface UIState {
   selectedDay: number | null;
   chatOpen: boolean;
+  mapOpen: boolean;
   selectedActivity: { dayIdx: number; actIdx: number } | null;
   theme: Theme;
 
   setSelectedDay: (day: number | null) => void;
   setChatOpen: (open: boolean) => void;
+  setMapOpen: (open: boolean) => void;
   setSelectedActivity: (a: { dayIdx: number; actIdx: number } | null) => void;
   setTheme: (theme: Theme) => void;
 }
@@ -23,11 +25,13 @@ const getStoredTheme = (): Theme => {
 export const useUIStore = create<UIState>((set) => ({
   selectedDay: null,
   chatOpen: true,
+  mapOpen: false,
   selectedActivity: null,
   theme: getStoredTheme(),
 
   setSelectedDay: (day) => set({ selectedDay: day }),
   setChatOpen: (open) => set({ chatOpen: open }),
+  setMapOpen: (open) => set({ mapOpen: open }),
   setSelectedActivity: (a) => set({ selectedActivity: a }),
   setTheme: (theme) => {
     localStorage.setItem('tripcraft-theme', theme);

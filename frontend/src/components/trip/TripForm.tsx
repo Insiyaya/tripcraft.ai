@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Calendar, DollarSign, Users, Hotel, Sparkles } from 'lucide-react';
+import { MapPin, Navigation, Calendar, DollarSign, Users, Hotel, Sparkles, Plane } from 'lucide-react';
 import InterestPicker from './InterestPicker';
 import type { TripCreate } from '../../types/trip';
 
@@ -25,6 +25,7 @@ function FormField({ icon: Icon, label, children }: { icon: typeof MapPin; label
 const inputClass = "w-full px-3 py-2 rounded-lg text-sm outline-none transition-shadow duration-200 border";
 
 export default function TripForm({ onSubmit, isLoading }: Props) {
+  const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -41,6 +42,7 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
     if (startDate < today) return;
     if (endDate <= startDate) return;
     onSubmit({
+      origin,
       destination,
       start_date: startDate,
       end_date: endDate,
@@ -59,19 +61,44 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <FormField icon={MapPin} label="Destination">
-        <input
-          type="text"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
-          placeholder="Paris, France"
-          required
-          className={inputClass}
-          style={inputStyle}
-          onFocus={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-glow)'}
-          onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
-        />
-      </FormField>
+      {/* From → To fields */}
+      <div>
+        <FormField icon={MapPin} label="From (Departure)">
+          <input
+            type="text"
+            value={origin}
+            onChange={(e) => setOrigin(e.target.value)}
+            placeholder="New York, USA"
+            required
+            className={inputClass}
+            style={inputStyle}
+            onFocus={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-glow)'}
+            onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
+          />
+        </FormField>
+
+        <div className="flex justify-center my-1.5">
+          <div className="flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="w-8 h-px" style={{ backgroundColor: 'var(--color-border)' }} />
+            <Plane className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
+            <div className="w-8 h-px" style={{ backgroundColor: 'var(--color-border)' }} />
+          </div>
+        </div>
+
+        <FormField icon={Navigation} label="To (Destination)">
+          <input
+            type="text"
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            placeholder="Paris, France"
+            required
+            className={inputClass}
+            style={inputStyle}
+            onFocus={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-glow)'}
+            onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
+          />
+        </FormField>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <FormField icon={Calendar} label="Start Date">
@@ -150,7 +177,7 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
 
       <motion.button
         type="submit"
-        disabled={isLoading || !destination || !startDate || !endDate || endDate <= startDate}
+        disabled={isLoading || !origin || !destination || !startDate || !endDate || endDate <= startDate}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className="w-full gradient-primary text-white py-2.5 rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-opacity shadow-md"

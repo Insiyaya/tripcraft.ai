@@ -1,5 +1,6 @@
 export interface Trip {
   _id: string;
+  origin?: string;
   destination: string;
   start_date: string;
   end_date: string;
@@ -13,6 +14,7 @@ export interface Trip {
 }
 
 export interface TripCreate {
+  origin: string;
   destination: string;
   start_date: string;
   end_date: string;
