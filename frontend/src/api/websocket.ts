@@ -1,4 +1,5 @@
 import type { StreamEvent } from '../types/chat';
+import { getAuthToken } from './authToken';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
@@ -12,7 +13,7 @@ export class WebSocketManager {
     this.onEvent = onEvent;
   }
 
-  connect() {
+  async connect() {
     this.closedByClient = false;
     this.hasCompleted = false;
 
@@ -28,7 +29,7 @@ export class WebSocketManager {
       url = `${protocol}//${window.location.host}/ws/trips/${this.tripId}/chat`;
     }
     // Attach auth token as query param
-    const token = localStorage.getItem('auth_token');
+    const token = await getAuthToken();
     if (token) {
       url += `?token=${encodeURIComponent(token)}`;
     }

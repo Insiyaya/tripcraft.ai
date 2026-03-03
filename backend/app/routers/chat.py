@@ -1,10 +1,9 @@
-import json
 import traceback
 from contextlib import suppress
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 
-from ..services.auth_service import decode_jwt
+from ..services.auth_service import get_current_user_from_token
 from ..services.trip_service import get_trip_by_id
 from ..services.agent_service import run_agent_stream
 
@@ -32,8 +31,8 @@ async def trip_chat(websocket: WebSocket, trip_id: str, token: str = Query(defau
         return
 
     try:
-        payload = decode_jwt(token)
-        user_id = payload.get("sub")
+        user = await get_current_user_from_token(token)
+        user_id = user.get("_id")
     except Exception:
         await _safe_send_json(websocket, {"type": "error", "content": "Invalid token"})
         with suppress(Exception):

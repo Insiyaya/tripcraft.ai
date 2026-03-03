@@ -15,7 +15,9 @@ services:
         value: travel_planner
       - key: FRONTEND_URL
         sync: false
-      - key: GOOGLE_CLIENT_ID
+      - key: CLERK_ISSUER
         sync: false
-      - key: JWT_SECRET_KEY
+      - key: CLERK_AUDIENCE
+        sync: false
+      - key: CLERK_JWKS_URL
         sync: false

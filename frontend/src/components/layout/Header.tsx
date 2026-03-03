@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Plane, Sun, Moon, Monitor, Plus, LogOut, User } from 'lucide-react';
 import { useUIStore } from '../../store/uiStore';
-import { useAuthStore } from '../../store/authStore';
+import { useAuth, useUser } from '@clerk/clerk-react';
 
 const THEME_OPTIONS = [
   { value: 'light' as const, icon: Sun, label: 'Light' },
@@ -15,9 +15,13 @@ export default function Header() {
   const setTheme = useUIStore((s) => s.setTheme);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { signOut, isSignedIn } = useAuth();
+  const { user } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const userName = user?.fullName || user?.username || 'User';
+  const userEmail = user?.primaryEmailAddress?.emailAddress || '';
+  const userPicture = user?.imageUrl;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -32,8 +36,8 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     setMenuOpen(false);
     navigate('/login');
   };
@@ -72,7 +76,7 @@ export default function Header() {
         </div>
 
         {/* Nav links */}
-        {isAuthenticated && (
+        {isSignedIn && (
           <nav className="flex items-center gap-1">
             <Link
               to="/trips"
@@ -95,17 +99,17 @@ export default function Header() {
         )}
 
         {/* User menu / Sign in */}
-        {isAuthenticated && user ? (
+        {isSignedIn && user ? (
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="flex items-center gap-2 rounded-full p-0.5 pr-3 transition-colors"
               style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
             >
-              {user.picture ? (
+              {userPicture ? (
                 <img
-                  src={user.picture}
-                  alt={user.name}
+                  src={userPicture}
+                  alt={userName}
                   className="w-7 h-7 rounded-full"
                   referrerPolicy="no-referrer"
                 />
@@ -115,7 +119,7 @@ export default function Header() {
                 </div>
               )}
               <span className="text-xs font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                {user.name.split(' ')[0]}
+                {userName.split(' ')[0]}
               </span>
             </button>
 
@@ -129,10 +133,10 @@ export default function Header() {
               >
                 <div className="px-4 py-2 border-b" style={{ borderColor: 'var(--color-border)' }}>
                   <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                    {user.name}
+                    {userName}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    {user.email}
+                    {userEmail}
                   </p>
                 </div>
                 <button

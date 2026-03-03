@@ -1,39 +1,18 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
+import { SignIn, useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
 import { Plane } from 'lucide-react';
-import axios from 'axios';
-import { useAuthStore } from '../store/authStore';
-import { googleLogin } from '../api/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const [errorMessage, setErrorMessage] = useState('');
+  const { userId, isLoaded } = useAuth();
 
-  const handleSuccess = async (credentialResponse: { credential?: string }) => {
-    if (!credentialResponse.credential) return;
-    setErrorMessage('');
-    try {
-      const data = await googleLogin(credentialResponse.credential);
-      setAuth(data.user, data.access_token);
+  useEffect(() => {
+    if (isLoaded && userId) {
       navigate('/trips');
-    } catch (err) {
-      console.error('Login failed:', err);
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 401) {
-          setErrorMessage('Google token rejected. Verify GOOGLE_CLIENT_ID is the same in Vercel and Render.');
-          return;
-        }
-        if (!err.response) {
-          setErrorMessage('Temporary network/CORS issue. Please try again in a few seconds.');
-          return;
-        }
-      }
-      setErrorMessage('Sign-in failed. Please try again.');
     }
-  };
+  }, [isLoaded, userId, navigate]);
 
   return (
     <div
@@ -63,26 +42,20 @@ export default function LoginPage() {
           Sign in to plan your perfect trip
         </p>
 
-        {/* Google Sign In */}
+        {/* Clerk Sign In */}
         <div className="flex justify-center">
-          <GoogleLogin
-            onSuccess={handleSuccess}
-            onError={() => {
-              console.error('Google login error');
-              setErrorMessage('Google sign-in popup failed. Please retry.');
+          <SignIn
+            routing="hash"
+            afterSignInUrl="/trips"
+            afterSignUpUrl="/trips"
+            appearance={{
+              elements: {
+                rootBox: 'w-full',
+                card: 'shadow-none bg-transparent border-none',
+              },
             }}
-            theme="outline"
-            size="large"
-            shape="pill"
-            width="280"
           />
         </div>
-
-        {errorMessage && (
-          <p className="text-xs mt-4 text-red-500">
-            {errorMessage}
-          </p>
-        )}
 
         <p className="text-xs mt-6" style={{ color: 'var(--color-text-muted)' }}>
           By signing in, you agree to let us store your trip data.
