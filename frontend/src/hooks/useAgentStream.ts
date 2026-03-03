@@ -4,6 +4,19 @@ import { useChatStore } from '../store/chatStore';
 import type { AgentPhase, StreamEvent } from '../types/chat';
 import { normalizeItinerary } from '../utils/itineraryNormalizer';
 
+function cleanDestinationInfo(raw: unknown): string {
+  if (typeof raw !== 'string') return '';
+  let s = raw.trim();
+  s = s.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+  if (s.startsWith('{')) {
+    try {
+      const obj = JSON.parse(s);
+      if (typeof obj.destination_info === 'string') return obj.destination_info;
+    } catch { /* use as-is */ }
+  }
+  return s;
+}
+
 export function useAgentStream(tripId: string) {
   const wsRef = useRef<WebSocketManager | null>(null);
   const tripIdRef = useRef(tripId);
@@ -47,7 +60,7 @@ export function useAgentStream(tripId: string) {
               setItinerary(days);
             }
             if (event.data.destination_info) {
-              setDestinationInfo(event.data.destination_info as string);
+              setDestinationInfo(cleanDestinationInfo(event.data.destination_info));
             }
           }
           break;
@@ -64,7 +77,7 @@ export function useAgentStream(tripId: string) {
             console.warn('[WS] complete event has no itinerary data');
           }
           if (event.data?.destination_info) {
-            setDestinationInfo(event.data.destination_info as string);
+            setDestinationInfo(cleanDestinationInfo(event.data.destination_info));
           }
           addMessage({
             role: 'assistant',

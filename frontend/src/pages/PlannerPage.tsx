@@ -15,6 +15,21 @@ import { fetchItinerary } from '../api/trips';
 import type { TripCreate } from '../types/trip';
 import { normalizeItinerary } from '../utils/itineraryNormalizer';
 
+/** Strip markdown/JSON wrappers from destination_info if the LLM returned raw JSON. */
+function cleanDestinationInfo(raw: string): string {
+  let s = raw.trim();
+  // Remove ```json ... ``` wrapper
+  s = s.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+  // If it looks like JSON, try to extract the destination_info string value
+  if (s.startsWith('{')) {
+    try {
+      const obj = JSON.parse(s);
+      if (typeof obj.destination_info === 'string') return obj.destination_info;
+    } catch { /* not valid JSON, use as-is */ }
+  }
+  return s;
+}
+
 export default function PlannerPage() {
   const { tripId } = useParams<{ tripId: string }>();
   const [activeTripId, setActiveTripId] = useState(tripId || '');
@@ -57,22 +72,28 @@ export default function PlannerPage() {
     fetchItinerary(activeTripId)
       .then((data) => {
         setItinerary(normalizeItinerary(data?.days));
-        setDestinationInfo(typeof data?.destination_info === 'string' ? data.destination_info : '');
+        setDestinationInfo(typeof data?.destination_info === 'string' ? cleanDestinationInfo(data.destination_info) : '');
       })
       .catch(() => {});
   }, [activeTripId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-fetch from DB when generation completes
+  // Re-fetch from DB when generation completes — only overwrite if DB has data
   useEffect(() => {
     if (currentPhase !== 'complete' || !activeTripId) return;
     const timer = setTimeout(() => {
       fetchItinerary(activeTripId)
         .then((data) => {
-          setItinerary(normalizeItinerary(data?.days));
-          setDestinationInfo(typeof data?.destination_info === 'string' ? data.destination_info : '');
+          const days = normalizeItinerary(data?.days);
+          // Only overwrite if DB returned actual data (save may still be in progress)
+          if (days.length > 0) {
+            setItinerary(days);
+          }
+          if (typeof data?.destination_info === 'string' && data.destination_info) {
+            setDestinationInfo(cleanDestinationInfo(data.destination_info));
+          }
         })
         .catch(() => {});
-    }, 500);
+    }, 2000);
     return () => clearTimeout(timer);
   }, [currentPhase]); // eslint-disable-line react-hooks/exhaustive-deps
 
