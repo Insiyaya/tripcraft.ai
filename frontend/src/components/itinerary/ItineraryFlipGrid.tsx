@@ -81,14 +81,14 @@ export default function ItineraryFlipGrid({ itinerary, destinationInfo, onViewDa
       <motion.div
         className="grid gap-5"
         style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
-        variants={shouldAnimate ? containerStagger : undefined}
+        variants={containerStagger}
         initial={shouldAnimate ? 'hidden' : false}
-        animate={shouldAnimate ? 'show' : undefined}
+        animate="show"
       >
         {itinerary.map((day, idx) => (
           <motion.div
             key={day.day_number}
-            variants={shouldAnimate ? cardEntrance : undefined}
+            variants={cardEntrance}
           >
             <DayFlipCard
               day={day}
