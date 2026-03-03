@@ -85,16 +85,19 @@ async def find_or_create_user_from_clerk(payload: dict[str, Any]) -> dict:
         raise HTTPException(status_code=401, detail="Invalid token payload")
 
     db = get_database()
-    user = await db.users.find_one({"clerk_user_id": clerk_user_id})
-
     user_fields = {
         "email": _extract_email(payload, clerk_user_id),
         "name": _extract_name(payload),
         "picture": _extract_picture(payload),
         "last_login": datetime.now(timezone.utc),
     }
+    user = await db.users.find_one({"clerk_user_id": clerk_user_id})
+    if not user:
+        # Migration bridge: link legacy users by email the first time they sign in via Clerk.
+        user = await db.users.find_one({"email": user_fields["email"]})
 
     if user:
+        user_fields["clerk_user_id"] = clerk_user_id
         await db.users.update_one({"_id": user["_id"]}, {"$set": user_fields})
         user.update(user_fields)
     else:
