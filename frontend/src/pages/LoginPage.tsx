@@ -1,18 +1,56 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SignIn, useAuth } from '@clerk/clerk-react';
+import { GoogleLogin } from '@react-oauth/google';
 import { motion } from 'framer-motion';
 import { Plane } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { API_BASE } from '../utils/constants';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { userId, isLoaded } = useAuth();
+  const user = useAuthStore((s) => s.user);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isLoaded && userId) {
+    if (user) {
       navigate('/trips');
     }
-  }, [isLoaded, userId, navigate]);
+  }, [user, navigate]);
+
+  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
+    const credential = credentialResponse.credential;
+    if (!credential) {
+      setError('Google sign-in failed — no credential returned.');
+      return;
+    }
+
+    try {
+      const resp = await fetch(`${API_BASE}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      });
+
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.detail || 'Login failed');
+      }
+
+      const { token, user: userData } = await resp.json();
+      setAuth(
+        {
+          id: userData.id || userData._id,
+          name: userData.name,
+          email: userData.email,
+          picture: userData.picture,
+        },
+        token,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    }
+  };
 
   return (
     <div
@@ -42,20 +80,22 @@ export default function LoginPage() {
           Sign in to plan your perfect trip
         </p>
 
-        {/* Clerk Sign In */}
+        {/* Google Sign In */}
         <div className="flex justify-center">
-          <SignIn
-            routing="hash"
-            afterSignInUrl="/trips"
-            afterSignUpUrl="/trips"
-            appearance={{
-              elements: {
-                rootBox: 'w-full',
-                card: 'shadow-none bg-transparent border-none',
-              },
-            }}
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google sign-in failed. Please try again.')}
+            theme="outline"
+            size="large"
+            width="300"
           />
         </div>
+
+        {error && (
+          <p className="text-sm mt-4" style={{ color: '#ef4444' }}>
+            {error}
+          </p>
+        )}
 
         <p className="text-xs mt-6" style={{ color: 'var(--color-text-muted)' }}>
           By signing in, you agree to let us store your trip data.

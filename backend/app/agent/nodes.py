@@ -188,15 +188,19 @@ def _build_weather_list(weather_data: dict, state: TripState) -> list[dict]:
     if not weather_data or "time" not in weather_data:
         return []
     dates = date_range(state["start_date"], state["end_date"])
+    temps_max = weather_data.get("temperature_2m_max", [])
+    temps_min = weather_data.get("temperature_2m_min", [])
+    precip = weather_data.get("precipitation_sum", [])
+    codes = weather_data.get("weathercode", [])
     weather_list = []
     for i, date in enumerate(dates):
         if i < len(weather_data.get("time", [])):
             weather_list.append({
                 "date": date,
-                "temp_max": weather_data["temperature_2m_max"][i],
-                "temp_min": weather_data["temperature_2m_min"][i],
-                "precipitation": weather_data["precipitation_sum"][i],
-                "weathercode": weather_data["weathercode"][i],
+                "temp_max": temps_max[i] if i < len(temps_max) else None,
+                "temp_min": temps_min[i] if i < len(temps_min) else None,
+                "precipitation": precip[i] if i < len(precip) else 0,
+                "weathercode": codes[i] if i < len(codes) else 0,
             })
     return weather_list
 

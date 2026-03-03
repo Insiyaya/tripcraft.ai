@@ -28,12 +28,9 @@ class MultiProviderLLM(BaseChatModel):
             try:
                 return llm._generate(messages, stop=stop, **kwargs)
             except Exception as e:
-                err = str(e).lower()
-                if "429" in str(e) or "rate_limit" in err or "resource_exhausted" in err or "quota" in err:
-                    logger.warning("Provider %d rate limited, trying next...", i)
-                    last_error = e
-                    continue
-                raise
+                logger.warning("Provider %d failed (%s), trying next...", i, e)
+                last_error = e
+                continue
         raise last_error  # type: ignore
 
     async def _agenerate(self, messages, stop=None, **kwargs):
@@ -42,12 +39,9 @@ class MultiProviderLLM(BaseChatModel):
             try:
                 return await llm._agenerate(messages, stop=stop, **kwargs)
             except Exception as e:
-                err = str(e).lower()
-                if "429" in str(e) or "rate_limit" in err or "resource_exhausted" in err or "quota" in err:
-                    logger.warning("Provider %d rate limited, trying next...", i)
-                    last_error = e
-                    continue
-                raise
+                logger.warning("Provider %d failed (%s), trying next...", i, e)
+                last_error = e
+                continue
         raise last_error  # type: ignore
 
 

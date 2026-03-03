@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Plane, Sun, Moon, Monitor, Plus, LogOut, User } from 'lucide-react';
 import { useUIStore } from '../../store/uiStore';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuthStore } from '../../store/authStore';
 
 const THEME_OPTIONS = [
   { value: 'light' as const, icon: Sun, label: 'Light' },
@@ -15,13 +15,15 @@ export default function Header() {
   const setTheme = useUIStore((s) => s.setTheme);
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, isSignedIn } = useAuth();
-  const { user } = useUser();
+  const authUser = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const userName = user?.fullName || user?.username || 'User';
-  const userEmail = user?.primaryEmailAddress?.emailAddress || '';
-  const userPicture = user?.imageUrl;
+
+  const isSignedIn = !!authUser;
+  const userName = authUser?.name || 'User';
+  const userEmail = authUser?.email || '';
+  const userPicture = authUser?.picture;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -36,8 +38,8 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const handleLogout = async () => {
-    await signOut();
+  const handleLogout = () => {
+    logout();
     setMenuOpen(false);
     navigate('/login');
   };
@@ -99,7 +101,7 @@ export default function Header() {
         )}
 
         {/* User menu / Sign in */}
-        {isSignedIn && user ? (
+        {isSignedIn && authUser ? (
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}

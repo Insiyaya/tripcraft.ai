@@ -13,6 +13,6 @@ geopy
 python-dotenv
 websockets
 aiohttp
-PyJWT[crypto]
-cryptography
+PyJWT
+google-auth
 requests

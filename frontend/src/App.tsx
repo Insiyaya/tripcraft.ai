@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ClerkProvider, useAuth } from '@clerk/clerk-react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import MainLayout from './components/layout/MainLayout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import TripsListPage from './pages/TripsListPage';
 import PlannerPage from './pages/PlannerPage';
 import { useUIStore } from './store/uiStore';
-import { setAuthTokenGetter } from './api/authToken';
+import { useAuthStore } from './store/authStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,7 +16,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useUIStore((s) => s.theme);
@@ -42,48 +42,40 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 function AuthLoader({ children }: { children: React.ReactNode }) {
-  const { isLoaded } = useAuth();
+  const isLoaded = useAuthStore((s) => s.isLoaded);
+  const initialize = useAuthStore((s) => s.initialize);
+
   useEffect(() => {
-    return () => setAuthTokenGetter(async () => null);
-  }, []);
+    initialize();
+  }, [initialize]);
 
   if (!isLoaded) return null;
   return <>{children}</>;
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isLoaded, userId } = useAuth();
+  const user = useAuthStore((s) => s.user);
+  const isLoaded = useAuthStore((s) => s.isLoaded);
   if (!isLoaded) return null;
-  if (!userId) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
-function AuthTokenSync() {
-  const { getToken } = useAuth();
-
-  useEffect(() => {
-    setAuthTokenGetter(() => getToken());
-  }, [getToken]);
-
-  return null;
-}
-
 export default function App() {
-  if (!CLERK_PUBLISHABLE_KEY) {
+  if (!GOOGLE_CLIENT_ID) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 text-center">
         <div>
-          <h1 className="text-xl font-semibold mb-2">Missing Clerk key</h1>
-          <p className="text-sm opacity-80">Set `VITE_CLERK_PUBLISHABLE_KEY` to run the app.</p>
+          <h1 className="text-xl font-semibold mb-2">Missing Google Client ID</h1>
+          <p className="text-sm opacity-80">Set VITE_GOOGLE_CLIENT_ID to run the app.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
-        <AuthTokenSync />
         <ThemeProvider>
           <AuthLoader>
             <BrowserRouter>
@@ -121,6 +113,6 @@ export default function App() {
           </AuthLoader>
         </ThemeProvider>
       </QueryClientProvider>
-    </ClerkProvider>
+    </GoogleOAuthProvider>
   );
 }
