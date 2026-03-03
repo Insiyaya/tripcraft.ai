@@ -4,6 +4,8 @@ export class WebSocketManager {
   private ws: WebSocket | null = null;
   private onEvent: (event: StreamEvent) => void;
   private tripId: string;
+  private closedByClient = false;
+  private hasCompleted = false;
 
   constructor(tripId: string, onEvent: (event: StreamEvent) => void) {
     this.tripId = tripId;
@@ -11,6 +13,9 @@ export class WebSocketManager {
   }
 
   connect() {
+    this.closedByClient = false;
+    this.hasCompleted = false;
+
     const apiUrl = import.meta.env.VITE_API_URL || '';
     let url: string;
     if (apiUrl) {
@@ -32,6 +37,9 @@ export class WebSocketManager {
     this.ws.onmessage = (event) => {
       try {
         const data: StreamEvent = JSON.parse(event.data);
+        if (data.type === 'complete') {
+          this.hasCompleted = true;
+        }
         this.onEvent(data);
       } catch {
         console.error('Failed to parse WS message:', event.data);
@@ -43,8 +51,14 @@ export class WebSocketManager {
       this.onEvent({ type: 'error', content: 'Connection error' });
     };
 
-    this.ws.onclose = () => {
-      console.log('WebSocket closed');
+    this.ws.onclose = (event) => {
+      console.log('WebSocket closed', event.code, event.reason);
+      if (!this.closedByClient && !this.hasCompleted) {
+        this.onEvent({
+          type: 'error',
+          content: `Connection closed before completion (code: ${event.code})`,
+        });
+      }
     };
 
     return new Promise<void>((resolve) => {
@@ -59,6 +73,7 @@ export class WebSocketManager {
   }
 
   disconnect() {
+    this.closedByClient = true;
     this.ws?.close();
     this.ws = null;
   }

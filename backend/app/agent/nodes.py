@@ -1,10 +1,27 @@
 import json
 import logging
 import traceback
+import asyncio
 
 from langchain_core.messages import HumanMessage, AIMessage
 
 logger = logging.getLogger(__name__)
+
+RESEARCH_TIMEOUT_SEC = 90
+PLAN_TIMEOUT_SEC = 180
+VALIDATE_TIMEOUT_SEC = 90
+OPTIMIZE_TIMEOUT_SEC = 120
+CHAT_TIMEOUT_SEC = 90
+
+
+async def _invoke_with_timeout(llm, prompt: str, timeout_sec: int):
+    try:
+        return await asyncio.wait_for(
+            llm.ainvoke([HumanMessage(content=prompt)]),
+            timeout=timeout_sec,
+        )
+    except asyncio.TimeoutError as err:
+        raise RuntimeError(f"LLM request timed out after {timeout_sec}s") from err
 
 from .llm import get_llm
 from .prompts import (
@@ -93,7 +110,7 @@ async def research_destination(state: TripState) -> dict:
         accommodation_area=state.get("accommodation_area", "city center"),
     )
 
-    response = await llm.ainvoke([HumanMessage(content=prompt)])
+    response = await _invoke_with_timeout(llm, prompt, RESEARCH_TIMEOUT_SEC)
     try:
         data = _parse_json_response(response.content)
         return {
@@ -212,7 +229,7 @@ async def plan_itinerary(state: TripState) -> dict:
         validation_feedback=validation_feedback,
     )
 
-    response = await llm.ainvoke([HumanMessage(content=prompt)])
+    response = await _invoke_with_timeout(llm, prompt, PLAN_TIMEOUT_SEC)
     try:
         data = _parse_json_response(response.content)
         days = data.get("days", [])
@@ -296,7 +313,7 @@ async def validate_itinerary(state: TripState) -> dict:
         itinerary_json=json.dumps(state.get("itinerary", []), indent=2),
     )
 
-    response = await llm.ainvoke([HumanMessage(content=prompt)])
+    response = await _invoke_with_timeout(llm, prompt, VALIDATE_TIMEOUT_SEC)
     try:
         data = _parse_json_response(response.content)
         return {
@@ -320,7 +337,7 @@ async def optimize_route(state: TripState) -> dict:
         itinerary_json=json.dumps(state.get("itinerary", []), indent=2),
     )
 
-    response = await llm.ainvoke([HumanMessage(content=prompt)])
+    response = await _invoke_with_timeout(llm, prompt, OPTIMIZE_TIMEOUT_SEC)
     try:
         data = _parse_json_response(response.content)
         days = data.get("days", state.get("itinerary", []))
@@ -398,7 +415,7 @@ async def handle_chat(state: TripState) -> dict:
         user_message=last_message,
     )
 
-    response = await llm.ainvoke([HumanMessage(content=prompt)])
+    response = await _invoke_with_timeout(llm, prompt, CHAT_TIMEOUT_SEC)
     try:
         data = _parse_json_response(response.content)
         next_phase = data.get("next_phase", "done")

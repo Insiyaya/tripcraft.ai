@@ -42,6 +42,8 @@ export default function PlannerPage() {
   const reset = useChatStore((s) => s.reset);
   const setItinerary = useChatStore((s) => s.setItinerary);
   const setDestinationInfo = useChatStore((s) => s.setDestinationInfo);
+  const setIsStreaming = useChatStore((s) => s.setIsStreaming);
+  const setCurrentPhase = useChatStore((s) => s.setCurrentPhase);
 
   useEffect(() => {
     return () => disconnect();
@@ -94,6 +96,34 @@ export default function PlannerPage() {
   };
 
   const isGenerating = isStreaming && currentPhase !== 'idle' && currentPhase !== 'complete';
+
+  // Deployment fallback: if WS stream gets interrupted, poll DB for saved itinerary
+  useEffect(() => {
+    if (!activeTripId || !isGenerating || itinerary.length > 0) return;
+
+    const interval = setInterval(() => {
+      fetchItinerary(activeTripId)
+        .then((data) => {
+          const days = normalizeItinerary(data?.days);
+          if (days.length === 0) return;
+          setItinerary(days);
+          setDestinationInfo(typeof data?.destination_info === 'string' ? data.destination_info : '');
+          setIsStreaming(false);
+          setCurrentPhase('complete');
+        })
+        .catch(() => {});
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [
+    activeTripId,
+    isGenerating,
+    itinerary.length,
+    setItinerary,
+    setDestinationInfo,
+    setIsStreaming,
+    setCurrentPhase,
+  ]);
 
   const handleViewDayOnMap = (dayIdx: number) => {
     setSelectedDay(dayIdx);
