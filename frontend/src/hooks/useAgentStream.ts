@@ -111,12 +111,19 @@ export function useAgentStream(tripId: string) {
   const generate = useCallback(async (overrideTripId?: string) => {
     const id = overrideTripId || tripIdRef.current;
     if (!id) return;
-    await connectWithId(id);
     useChatStore.getState().reset();
     setIsStreaming(true);
     setCurrentPhase('research_destination');
     addMessage({ role: 'system', content: 'Starting itinerary generation...' });
-    wsRef.current!.send('generate');
+    try {
+      await connectWithId(id);
+      wsRef.current?.send('generate');
+    } catch (err) {
+      console.error('[Agent] WebSocket connect failed:', err);
+      setIsStreaming(false);
+      setCurrentPhase('error');
+      addMessage({ role: 'assistant', content: 'Failed to connect to the server. It may be starting up — please try again in a moment.' });
+    }
   }, [connectWithId, setIsStreaming, setCurrentPhase, addMessage]);
 
   const sendMessage = useCallback(

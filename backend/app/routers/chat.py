@@ -33,8 +33,10 @@ async def trip_chat(websocket: WebSocket, trip_id: str, token: str = Query(defau
     try:
         user = await get_current_user_from_token(token)
         user_id = user.get("_id")
-    except Exception:
-        await _safe_send_json(websocket, {"type": "error", "content": "Invalid token"})
+    except Exception as auth_err:
+        import logging
+        logging.getLogger(__name__).warning("WS auth failed: %s", auth_err)
+        await _safe_send_json(websocket, {"type": "error", "content": f"Authentication failed: {auth_err}"})
         with suppress(Exception):
             await websocket.close()
         return

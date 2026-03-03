@@ -32,7 +32,13 @@ export class WebSocketManager {
     const token = await getAuthToken();
     if (token) {
       url += `?token=${encodeURIComponent(token)}`;
+    } else {
+      console.error('[WS] No auth token available');
+      this.onEvent({ type: 'error', content: 'Authentication failed — please sign in again.' });
+      return;
     }
+
+    console.log('[WS] Connecting to:', url.replace(/token=[^&]+/, 'token=***'));
     this.ws = new WebSocket(url);
 
     this.ws.onmessage = (event) => {
@@ -48,22 +54,38 @@ export class WebSocketManager {
     };
 
     this.ws.onerror = (err) => {
-      console.error('WebSocket error:', err);
-      this.onEvent({ type: 'error', content: 'Connection error' });
+      console.error('[WS] Error:', err);
+      this.onEvent({ type: 'error', content: 'WebSocket connection error. The server may be starting up — try again in a moment.' });
     };
 
     this.ws.onclose = (event) => {
-      console.log('WebSocket closed', event.code, event.reason);
+      console.log('[WS] Closed', event.code, event.reason);
       if (!this.closedByClient && !this.hasCompleted) {
-        this.onEvent({
-          type: 'error',
-          content: `Connection closed before completion (code: ${event.code})`,
-        });
+        const hint = event.code === 1006
+          ? 'Connection lost — the server may have timed out. Your itinerary may still be generating in the background.'
+          : `Connection closed (code: ${event.code})`;
+        this.onEvent({ type: 'error', content: hint });
       }
     };
 
-    return new Promise<void>((resolve) => {
-      this.ws!.onopen = () => resolve();
+    return new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('WebSocket connection timeout'));
+        this.ws?.close();
+      }, 15000);
+
+      this.ws!.onopen = () => {
+        clearTimeout(timeout);
+        console.log('[WS] Connected');
+        resolve();
+      };
+
+      const origOnError = this.ws!.onerror;
+      this.ws!.onerror = (err) => {
+        clearTimeout(timeout);
+        if (origOnError) origOnError.call(this.ws!, err);
+        reject(new Error('WebSocket connection failed'));
+      };
     });
   }
 

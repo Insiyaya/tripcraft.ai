@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -6,10 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import connect_db, close_db
 from .routers import health, trips, itinerary, chat, auth
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_db()
+    logger.info("CORS origins: %s", cors_origins)
     yield
     await close_db()
 
@@ -45,6 +49,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+async def root():
+    return {"status": "ok", "app": "TripCraft AI"}
 
 app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(health.router, prefix="/api", tags=["health"])
