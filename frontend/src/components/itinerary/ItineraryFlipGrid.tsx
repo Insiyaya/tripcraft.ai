@@ -1,8 +1,9 @@
-import { useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { DayPlan } from '../../types/itinerary';
 import { formatCurrency } from '../../utils/formatters';
 import DayFlipCard from './DayFlipCard';
+import DayDetailModal from './DayDetailModal';
 
 interface Props {
   itinerary: DayPlan[];
@@ -28,6 +29,7 @@ const cardEntrance = {
 export default function ItineraryFlipGrid({ itinerary, destinationInfo, onViewDayOnMap }: Props) {
   const hasAnimated = useRef(false);
   const shouldAnimate = !hasAnimated.current;
+  const [expandedDayIdx, setExpandedDayIdx] = useState<number | null>(null);
 
   if (shouldAnimate && itinerary.length > 0) {
     hasAnimated.current = true;
@@ -53,7 +55,7 @@ export default function ItineraryFlipGrid({ itinerary, destinationInfo, onViewDa
             </p>
           )}
         </div>
-        <div className="text-right flex-shrink-0 ml-4">
+        <div className="text-right shrink-0 ml-4">
           <div className="flex items-center gap-4">
             <div>
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Days</p>
@@ -94,10 +96,26 @@ export default function ItineraryFlipGrid({ itinerary, destinationInfo, onViewDa
               day={day}
               index={idx}
               onViewOnMap={onViewDayOnMap ? () => onViewDayOnMap(idx) : undefined}
+              onExpand={() => setExpandedDayIdx(idx)}
             />
           </motion.div>
         ))}
       </motion.div>
+
+      {/* Expanded day detail modal */}
+      <AnimatePresence>
+        {expandedDayIdx !== null && itinerary[expandedDayIdx] && (
+          <DayDetailModal
+            day={itinerary[expandedDayIdx]}
+            index={expandedDayIdx}
+            onClose={() => setExpandedDayIdx(null)}
+            onViewOnMap={onViewDayOnMap ? () => {
+              setExpandedDayIdx(null);
+              onViewDayOnMap(expandedDayIdx);
+            } : undefined}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

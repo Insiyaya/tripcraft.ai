@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { RotateCcw, Clock, MapPin, DollarSign, Sun, Map } from 'lucide-react';
+import { RotateCcw, Clock, MapPin, DollarSign, Sun, Map, Maximize2 } from 'lucide-react';
 import type { DayPlan } from '../../types/itinerary';
 import { DAY_COLORS } from '../../utils/constants';
 import { formatDate, formatCurrency, formatDuration } from '../../utils/formatters';
@@ -10,9 +10,10 @@ interface Props {
   day: DayPlan;
   index: number;
   onViewOnMap?: () => void;
+  onExpand?: () => void;
 }
 
-export default function DayFlipCard({ day, index, onViewOnMap }: Props) {
+export default function DayFlipCard({ day, index, onViewOnMap, onExpand }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
   const color = DAY_COLORS[index % DAY_COLORS.length];
   const activities = Array.isArray(day.activities) ? day.activities : [];
@@ -145,15 +146,31 @@ export default function DayFlipCard({ day, index, onViewOnMap }: Props) {
               ))}
             </div>
 
-            {/* View on Map button */}
-            {onViewOnMap && (
-              <div className="p-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            {/* Action buttons */}
+            <div className="p-2 border-t flex gap-2" style={{ borderColor: 'var(--color-border)' }}>
+              {onExpand && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onExpand();
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                  style={{
+                    backgroundColor: 'var(--color-surface-tertiary)',
+                    color: 'var(--color-text-secondary)',
+                  }}
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  Expand
+                </button>
+              )}
+              {onViewOnMap && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onViewOnMap();
                   }}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
                   style={{
                     backgroundColor: 'var(--color-accent-light)',
                     color: 'var(--color-accent)',
@@ -162,8 +179,8 @@ export default function DayFlipCard({ day, index, onViewOnMap }: Props) {
                   <Map className="w-3.5 h-3.5" />
                   View on Map
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </motion.div>

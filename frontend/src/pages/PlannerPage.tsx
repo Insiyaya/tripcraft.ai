@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Map, MessageCircle, Sparkles, ChevronLeft, Plane, X, Compass } from 'lucide-react';
@@ -34,7 +34,6 @@ export default function PlannerPage() {
   const { tripId } = useParams<{ tripId: string }>();
   const [activeTripId, setActiveTripId] = useState(tripId || '');
   const [formCollapsed, setFormCollapsed] = useState(!!tripId);
-  const [autoGenerate, setAutoGenerate] = useState(false);
 
   // Sync activeTripId when URL changes (navigating between trips)
   useEffect(() => {
@@ -97,23 +96,13 @@ export default function PlannerPage() {
     return () => clearTimeout(timer);
   }, [currentPhase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hasGenerated = useRef(false);
-  useEffect(() => {
-    if (autoGenerate && activeTripId && !hasGenerated.current) {
-      hasGenerated.current = true;
-      setAutoGenerate(false);
-      const timer = setTimeout(() => generate(activeTripId), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [autoGenerate, activeTripId, generate]);
-
   const handleCreateTrip = async (tripData: TripCreate) => {
     const newTrip = await createMutation.mutateAsync(tripData);
     setActiveTripId(newTrip._id);
     setFormCollapsed(true);
-    hasGenerated.current = false;
-    setAutoGenerate(true);
     window.history.replaceState(null, '', `/planner/${newTrip._id}`);
+    // Generate immediately with the new trip ID
+    setTimeout(() => generate(newTrip._id), 400);
   };
 
   const isGenerating = isStreaming && currentPhase !== 'idle' && currentPhase !== 'complete';
@@ -274,7 +263,7 @@ export default function PlannerPage() {
         <div className="flex-1 overflow-hidden">
           {isGenerating ? (
             <div className="h-full flex items-center justify-center">
-              <TravelLoader />
+              <TravelLoader phase={currentPhase} />
             </div>
           ) : itinerary.length > 0 ? (
             <ItineraryFlipGrid
