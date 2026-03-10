@@ -56,6 +56,7 @@ export default function PlannerPage() {
   const reset = useChatStore((s) => s.reset);
   const setItinerary = useChatStore((s) => s.setItinerary);
   const setDestinationInfo = useChatStore((s) => s.setDestinationInfo);
+  const setCurrencyInfo = useChatStore((s) => s.setCurrencyInfo);
   const setIsStreaming = useChatStore((s) => s.setIsStreaming);
   const setCurrentPhase = useChatStore((s) => s.setCurrentPhase);
 
@@ -72,6 +73,7 @@ export default function PlannerPage() {
       .then((data) => {
         setItinerary(normalizeItinerary(data?.days));
         setDestinationInfo(typeof data?.destination_info === 'string' ? cleanDestinationInfo(data.destination_info) : '');
+        if (data?.currency?.code) setCurrencyInfo(data.currency);
       })
       .catch(() => {});
   }, [activeTripId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -90,6 +92,7 @@ export default function PlannerPage() {
           if (typeof data?.destination_info === 'string' && data.destination_info) {
             setDestinationInfo(cleanDestinationInfo(data.destination_info));
           }
+          if (data?.currency?.code) setCurrencyInfo(data.currency);
         })
         .catch(() => {});
     }, 2000);
@@ -118,6 +121,7 @@ export default function PlannerPage() {
           if (days.length === 0) return;
           setItinerary(days);
           setDestinationInfo(typeof data?.destination_info === 'string' ? data.destination_info : '');
+          if (data?.currency?.code) setCurrencyInfo(data.currency);
           setIsStreaming(false);
           setCurrentPhase('complete');
         })

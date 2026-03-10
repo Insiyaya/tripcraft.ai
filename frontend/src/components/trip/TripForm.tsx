@@ -30,6 +30,7 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [budget, setBudget] = useState(1000);
+  const [currency, setCurrency] = useState('USD');
   const [travelers, setTravelers] = useState(1);
   const [interests, setInterests] = useState<string[]>([]);
   const [accommodation, setAccommodation] = useState('');
@@ -47,6 +48,7 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
       start_date: startDate,
       end_date: endDate,
       budget_usd: budget,
+      currency,
       travelers,
       interests,
       accommodation_area: accommodation,
@@ -128,19 +130,47 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
         </FormField>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <FormField icon={DollarSign} label="Budget (USD)">
-          <input
-            type="number"
-            value={budget}
-            onChange={(e) => setBudget(Number(e.target.value))}
-            min={100}
-            step={100}
-            required
-            className={inputClass}
-            style={inputStyle}
-          />
+      <div className="space-y-3">
+        <FormField icon={DollarSign} label="Budget">
+          <div className="flex gap-2">
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="px-2 py-2 rounded-lg text-sm outline-none border shrink-0 w-20"
+              style={inputStyle}
+            >
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+              <option value="INR">INR</option>
+              <option value="AUD">AUD</option>
+              <option value="CAD">CAD</option>
+              <option value="THB">THB</option>
+              <option value="MXN">MXN</option>
+              <option value="BRL">BRL</option>
+              <option value="CNY">CNY</option>
+              <option value="KRW">KRW</option>
+              <option value="TRY">TRY</option>
+              <option value="SGD">SGD</option>
+              <option value="CHF">CHF</option>
+              <option value="NZD">NZD</option>
+            </select>
+            <input
+              type="number"
+              value={budget}
+              onChange={(e) => setBudget(Number(e.target.value))}
+              min={100}
+              step={100}
+              required
+              className={inputClass}
+              style={inputStyle}
+            />
+          </div>
         </FormField>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
         <FormField icon={Users} label="Travelers">
           <input
             type="number"

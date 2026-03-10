@@ -7,8 +7,17 @@ export function formatDate(dateStr: string): string {
   });
 }
 
-export function formatCurrency(amount: number): string {
-  return `$${amount.toFixed(0)}`;
+export function formatCurrency(amount: number, currencyCode: string = 'USD'): string {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `$${amount.toFixed(0)}`;
+  }
 }
 
 export function formatDuration(hours: number): string {

@@ -4,6 +4,8 @@ import L from 'leaflet';
 import type { DayPlan } from '../../types/itinerary';
 import { DAY_COLORS } from '../../utils/constants';
 import { useUIStore } from '../../store/uiStore';
+import { useChatStore } from '../../store/chatStore';
+import { formatCurrency } from '../../utils/formatters';
 
 // Fix default marker icon issue with bundlers
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -107,6 +109,7 @@ interface Props {
 export default function TripMap({ itinerary }: Props) {
   const selectedDay = useUIStore((s) => s.selectedDay);
   const setSelectedActivity = useUIStore((s) => s.setSelectedActivity);
+  const cc = useChatStore((s) => s.currencyInfo.code);
 
   const daysToShow =
     selectedDay !== null && selectedDay >= 0 && selectedDay < itinerary.length
@@ -159,7 +162,7 @@ export default function TripMap({ itinerary }: Props) {
                         <br />
                         {activity.start_time} - {activity.end_time}
                         <br />
-                        {activity.category} | ${activity.cost_estimate_usd}
+                        {activity.category} | {formatCurrency(activity.cost_estimate_usd, cc)}
                       </div>
                     </Popup>
                   </Marker>

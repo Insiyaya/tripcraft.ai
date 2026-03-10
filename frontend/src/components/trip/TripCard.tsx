@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trash2, ArrowRight } from 'lucide-react';
 import type { Trip } from '../../types/trip';
-import { formatDate, countDays } from '../../utils/formatters';
+import { formatDate, countDays, formatCurrency } from '../../utils/formatters';
 
 interface Props {
   trip: Trip;
@@ -46,7 +46,7 @@ export default function TripCard({ trip, onDelete }: Props) {
         <p>
           {formatDate(trip.start_date)} - {formatDate(trip.end_date)} ({days} days)
         </p>
-        <p>Budget: ${trip.budget_usd} | {trip.travelers} traveler(s)</p>
+        <p>Budget: {formatCurrency(trip.budget_usd)} | {trip.travelers} traveler(s)</p>
         <div className="flex flex-wrap gap-1 mt-2">
           {trip.interests.map((i) => (
             <span

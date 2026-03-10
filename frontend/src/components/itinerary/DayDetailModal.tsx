@@ -4,6 +4,7 @@ import { X, Clock, MapPin, DollarSign, Sun, Star, Map } from 'lucide-react';
 import type { DayPlan } from '../../types/itinerary';
 import { DAY_COLORS } from '../../utils/constants';
 import { formatDate, formatCurrency, formatDuration } from '../../utils/formatters';
+import { useChatStore } from '../../store/chatStore';
 import { cn } from '../../lib/utils';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 
 export default function DayDetailModal({ day, index, onClose, onViewOnMap }: Props) {
   const color = DAY_COLORS[index % DAY_COLORS.length];
+  const cc = useChatStore((s) => s.currencyInfo.code);
   const activities = Array.isArray(day.activities) ? day.activities : [];
   const travelTimes = Array.isArray(day.travel_times_min) ? day.travel_times_min : [];
 
@@ -107,7 +109,7 @@ export default function DayDetailModal({ day, index, onClose, onViewOnMap }: Pro
             </div>
             <div className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
               <DollarSign className="w-4 h-4" style={{ color }} />
-              <span>{formatCurrency(day.total_cost_usd || 0)}</span>
+              <span>{formatCurrency(day.total_cost_usd || 0, cc)}</span>
             </div>
             {onViewOnMap && (
               <button
@@ -154,7 +156,7 @@ export default function DayDetailModal({ day, index, onClose, onViewOnMap }: Pro
                       </span>
                       <span className="flex items-center gap-1">
                         <DollarSign className="w-3 h-3" />
-                        {formatCurrency(activity.cost_estimate_usd)}
+                        {formatCurrency(activity.cost_estimate_usd, cc)}
                       </span>
                       {activity.rating > 0 && (
                         <span className="flex items-center gap-1">

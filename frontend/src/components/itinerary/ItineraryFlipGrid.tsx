@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { DayPlan } from '../../types/itinerary';
 import { formatCurrency } from '../../utils/formatters';
+import { useChatStore } from '../../store/chatStore';
 import DayFlipCard from './DayFlipCard';
 import DayDetailModal from './DayDetailModal';
 
@@ -30,6 +31,7 @@ export default function ItineraryFlipGrid({ itinerary, destinationInfo, onViewDa
   const hasAnimated = useRef(false);
   const shouldAnimate = !hasAnimated.current;
   const [expandedDayIdx, setExpandedDayIdx] = useState<number | null>(null);
+  const cc = useChatStore((s) => s.currencyInfo.code);
 
   if (shouldAnimate && itinerary.length > 0) {
     hasAnimated.current = true;
@@ -72,7 +74,7 @@ export default function ItineraryFlipGrid({ itinerary, destinationInfo, onViewDa
             <div>
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Budget</p>
               <p className="font-bold text-lg gradient-text">
-                {formatCurrency(totalCost)}
+                {formatCurrency(totalCost, cc)}
               </p>
             </div>
           </div>

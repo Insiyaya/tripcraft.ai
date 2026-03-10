@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import type { ChatMessage, AgentPhase } from '../types/chat';
 import type { DayPlan } from '../types/itinerary';
 
+interface CurrencyInfo {
+  code: string;
+  rate_to_usd: number;
+}
+
 interface ChatState {
   messages: ChatMessage[];
   currentPhase: AgentPhase;
@@ -9,6 +14,7 @@ interface ChatState {
   streamingText: string;
   itinerary: DayPlan[];
   destinationInfo: string;
+  currencyInfo: CurrencyInfo;
 
   addMessage: (msg: ChatMessage) => void;
   setCurrentPhase: (phase: AgentPhase) => void;
@@ -17,6 +23,7 @@ interface ChatState {
   clearStreamingText: () => void;
   setItinerary: (days: DayPlan[]) => void;
   setDestinationInfo: (info: string) => void;
+  setCurrencyInfo: (info: CurrencyInfo) => void;
   reset: () => void;
 }
 
@@ -27,6 +34,7 @@ export const useChatStore = create<ChatState>((set) => ({
   streamingText: '',
   itinerary: [],
   destinationInfo: '',
+  currencyInfo: { code: 'USD', rate_to_usd: 1 },
 
   addMessage: (msg) =>
     set((s) => ({ messages: [...s.messages, msg] })),
@@ -41,6 +49,7 @@ export const useChatStore = create<ChatState>((set) => ({
 
   setItinerary: (days) => set({ itinerary: days }),
   setDestinationInfo: (info) => set({ destinationInfo: info }),
+  setCurrencyInfo: (info) => set({ currencyInfo: info }),
 
   reset: () =>
     set({
@@ -50,5 +59,6 @@ export const useChatStore = create<ChatState>((set) => ({
       streamingText: '',
       itinerary: [],
       destinationInfo: '',
+      currencyInfo: { code: 'USD', rate_to_usd: 1 },
     }),
 }));
