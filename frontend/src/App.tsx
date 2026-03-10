@@ -22,20 +22,7 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useUIStore((s) => s.theme);
 
   useEffect(() => {
-    const root = document.documentElement;
-    const applyTheme = (dark: boolean) => {
-      root.classList.toggle('dark', dark);
-    };
-
-    if (theme === 'system') {
-      const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      applyTheme(mq.matches);
-      const handler = (e: MediaQueryListEvent) => applyTheme(e.matches);
-      mq.addEventListener('change', handler);
-      return () => mq.removeEventListener('change', handler);
-    } else {
-      applyTheme(theme === 'dark');
-    }
+    document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
   return <>{children}</>;
@@ -49,7 +36,15 @@ function AuthLoader({ children }: { children: React.ReactNode }) {
     initialize();
   }, [initialize]);
 
-  if (!isLoaded) return null;
+  if (!isLoaded)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-slate-400">Loading…</p>
+        </div>
+      </div>
+    );
   return <>{children}</>;
 }
 

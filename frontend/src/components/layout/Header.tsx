@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Plane, Sun, Moon, Monitor, Plus, LogOut, User } from 'lucide-react';
+import { Plane, Sun, Moon, Plus, LogOut, User } from 'lucide-react';
 import { useUIStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 
 const THEME_OPTIONS = [
   { value: 'light' as const, icon: Sun, label: 'Light' },
   { value: 'dark' as const, icon: Moon, label: 'Dark' },
-  { value: 'system' as const, icon: Monitor, label: 'System' },
 ];
 
 export default function Header() {

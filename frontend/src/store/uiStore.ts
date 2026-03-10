@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'dark';
 
 interface UIState {
   selectedDay: number | null;
@@ -18,8 +18,8 @@ interface UIState {
 
 const getStoredTheme = (): Theme => {
   const stored = localStorage.getItem('tripcraft-theme');
-  if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
-  return 'system';
+  if (stored === 'light' || stored === 'dark') return stored;
+  return 'dark';
 };
 
 export const useUIStore = create<UIState>((set) => ({
