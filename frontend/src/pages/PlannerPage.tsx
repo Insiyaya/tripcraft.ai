@@ -65,9 +65,9 @@ export default function PlannerPage() {
 
   // Reset chat state and load saved itinerary when trip changes
   useEffect(() => {
-    if (!activeTripId) return;
     reset();
     setSelectedDay(null);
+    if (!activeTripId) return;
     fetchItinerary(activeTripId)
       .then((data) => {
         setItinerary(normalizeItinerary(data?.days));
