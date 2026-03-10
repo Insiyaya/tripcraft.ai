@@ -83,7 +83,7 @@ function ThemeTileLayer() {
   const map = useMap();
 
   // Determine if dark mode
-  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const isDark = theme === 'dark';
   const url = isDark ? TILE_URLS.dark : TILE_URLS.light;
 
   // Force re-render tile layer when theme changes
