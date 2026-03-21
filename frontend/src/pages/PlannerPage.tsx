@@ -35,11 +35,15 @@ export default function PlannerPage() {
   const [activeTripId, setActiveTripId] = useState(tripId || '');
   const [formCollapsed, setFormCollapsed] = useState(!!tripId);
 
-  // Sync activeTripId when URL changes (navigating between trips)
+  // Sync activeTripId when URL changes (navigating between trips or fresh /planner)
   useEffect(() => {
     if (tripId && tripId !== activeTripId) {
       setActiveTripId(tripId);
       setFormCollapsed(true);
+    } else if (!tripId && activeTripId) {
+      // Navigated to /planner without a trip — reset stale state
+      setActiveTripId('');
+      setFormCollapsed(false);
     }
   }, [tripId]); // eslint-disable-line react-hooks/exhaustive-deps
 

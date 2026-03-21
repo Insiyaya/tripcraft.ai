@@ -11,6 +11,7 @@ export default function LoginPage() {
   const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
   const [error, setError] = useState('');
+  const [signingIn, setSigningIn] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -24,6 +25,9 @@ export default function LoginPage() {
       setError('Google sign-in failed — no credential returned.');
       return;
     }
+
+    setSigningIn(true);
+    setError('');
 
     try {
       const resp = await fetch(`${API_BASE}/auth/google`, {
@@ -48,6 +52,7 @@ export default function LoginPage() {
         token,
       );
     } catch (err) {
+      setSigningIn(false);
       setError(err instanceof Error ? err.message : 'Login failed');
     }
   };
@@ -82,13 +87,22 @@ export default function LoginPage() {
 
         {/* Google Sign In */}
         <div className="flex justify-center">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => setError('Google sign-in failed. Please try again.')}
-            theme="outline"
-            size="large"
-            width="300"
-          />
+          {signingIn ? (
+            <div className="flex flex-col items-center gap-3 py-2">
+              <div className="w-8 h-8 border-3 border-blue-400 border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                Signing you in... This may take a moment.
+              </p>
+            </div>
+          ) : (
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google sign-in failed. Please try again.')}
+              theme="outline"
+              size="large"
+              width="300"
+            />
+          )}
         </div>
 
         {error && (
