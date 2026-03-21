@@ -3,6 +3,7 @@ import { Footprints } from 'lucide-react';
 import type { DayPlan } from '../../types/itinerary';
 import { DAY_COLORS } from '../../utils/constants';
 import { formatDate, formatCurrency } from '../../utils/formatters';
+import { useChatStore } from '../../store/chatStore';
 import ActivityCard from './ActivityCard';
 import { useUIStore } from '../../store/uiStore';
 
@@ -26,6 +27,7 @@ interface Props {
 export default function DayTimeline({ day }: Props) {
   const color = DAY_COLORS[(day.day_number - 1) % DAY_COLORS.length];
   const setSelectedActivity = useUIStore((s) => s.setSelectedActivity);
+  const { code: cc, rate_to_usd: rate } = useChatStore((s) => s.currencyInfo);
 
   return (
     <div className="space-y-2">
@@ -43,7 +45,7 @@ export default function DayTimeline({ day }: Props) {
           </span>
         </div>
         <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-          {formatCurrency(day.total_cost_usd)}
+          {formatCurrency(day.total_cost_usd, cc, rate)}
         </span>
       </div>
 

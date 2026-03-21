@@ -31,7 +31,7 @@ export default function ItineraryFlipGrid({ itinerary, destinationInfo, onViewDa
   const hasAnimated = useRef(false);
   const shouldAnimate = !hasAnimated.current;
   const [expandedDayIdx, setExpandedDayIdx] = useState<number | null>(null);
-  const cc = useChatStore((s) => s.currencyInfo.code);
+  const { code: cc, rate_to_usd: rate } = useChatStore((s) => s.currencyInfo);
 
   if (shouldAnimate && itinerary.length > 0) {
     hasAnimated.current = true;
@@ -74,7 +74,7 @@ export default function ItineraryFlipGrid({ itinerary, destinationInfo, onViewDa
             <div>
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Budget</p>
               <p className="font-bold text-lg gradient-text">
-                {formatCurrency(totalCost, cc)}
+                {formatCurrency(totalCost, cc, rate)}
               </p>
             </div>
           </div>

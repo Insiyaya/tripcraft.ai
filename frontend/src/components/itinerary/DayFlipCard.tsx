@@ -17,7 +17,7 @@ interface Props {
 export default function DayFlipCard({ day, index, onViewOnMap, onExpand }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
   const color = DAY_COLORS[index % DAY_COLORS.length];
-  const cc = useChatStore((s) => s.currencyInfo.code);
+  const { code: cc, rate_to_usd: rate } = useChatStore((s) => s.currencyInfo);
   const activities = Array.isArray(day.activities) ? day.activities : [];
   const travelTimes = Array.isArray(day.travel_times_min) ? day.travel_times_min : [];
 
@@ -85,7 +85,7 @@ export default function DayFlipCard({ day, index, onViewOnMap, onExpand }: Props
 
               <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                 <DollarSign className="w-4 h-4" style={{ color }} />
-                <span>{formatCurrency(day.total_cost_usd || 0, cc)}</span>
+                <span>{formatCurrency(day.total_cost_usd || 0, cc, rate)}</span>
               </div>
             </div>
 
@@ -122,7 +122,7 @@ export default function DayFlipCard({ day, index, onViewOnMap, onExpand }: Props
                 </span>
               </div>
               <span className="text-xs font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                {formatCurrency(day.total_cost_usd || 0, cc)}
+                {formatCurrency(day.total_cost_usd || 0, cc, rate)}
               </span>
             </div>
 

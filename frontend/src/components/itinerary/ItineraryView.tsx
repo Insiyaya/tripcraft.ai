@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { DayPlan } from '../../types/itinerary';
 import { DAY_COLORS } from '../../utils/constants';
 import { formatCurrency } from '../../utils/formatters';
+import { useChatStore } from '../../store/chatStore';
 import DayTimeline from './DayTimeline';
 import { useUIStore } from '../../store/uiStore';
 
@@ -13,6 +14,7 @@ interface Props {
 export default function ItineraryView({ itinerary, destinationInfo }: Props) {
   const selectedDay = useUIStore((s) => s.selectedDay);
   const setSelectedDay = useUIStore((s) => s.setSelectedDay);
+  const { code: cc, rate_to_usd: rate } = useChatStore((s) => s.currencyInfo);
 
   const totalCost = itinerary.reduce((sum, d) => sum + (d.total_cost_usd || 0), 0);
 
@@ -70,7 +72,7 @@ export default function ItineraryView({ itinerary, destinationInfo }: Props) {
       <div className="text-xs mb-3 flex justify-between" style={{ color: 'var(--color-text-muted)' }}>
         <span>Total estimated cost:</span>
         <span className="font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-          {formatCurrency(totalCost)}
+          {formatCurrency(totalCost, cc, rate)}
         </span>
       </div>
 

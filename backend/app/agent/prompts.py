@@ -30,7 +30,15 @@ Return your response as JSON with this structure:
     "research_sufficient": true
 }}
 
-Important: Use real, accurate coordinates. Estimate costs realistically. Include a mix of free and paid activities.
+CRITICAL RULES for cost_estimate_usd:
+- ALL prices MUST be in USD. Convert from local currency to USD using current rates.
+- Use REAL, VERIFIED entry fees — do not guess. Research actual ticket prices.
+  Examples: Louvre ~$22 USD, Hawa Mahal ~$2.50 USD (₹200), Tokyo Tower ~$7 USD (¥1000).
+- Free attractions (parks, beaches, streets, temples with no entry fee) MUST be 0.
+- Restaurants: estimate a realistic per-person meal cost in USD.
+- If you are unsure of the exact price, use your best knowledge but never invent prices.
+
+Use real, accurate coordinates. Include a mix of free and paid activities.
 """
 
 PLAN_PROMPT = """You are an expert travel itinerary planner. Create a day-by-day itinerary.

@@ -7,16 +7,27 @@ export function formatDate(dateStr: string): string {
   });
 }
 
-export function formatCurrency(amount: number, currencyCode: string = 'USD'): string {
+/**
+ * Format a USD amount in the given currency.
+ * @param amountUsd - the amount stored in USD
+ * @param currencyCode - target currency code (e.g. "INR", "EUR")
+ * @param rateToUsd - how many units of target currency equal 1 USD (e.g. 83 for INR)
+ */
+export function formatCurrency(
+  amountUsd: number,
+  currencyCode: string = 'USD',
+  rateToUsd: number = 1,
+): string {
+  const converted = amountUsd * (rateToUsd || 1);
   try {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currencyCode,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(converted);
   } catch {
-    return `$${amount.toFixed(0)}`;
+    return `$${converted.toFixed(0)}`;
   }
 }
 

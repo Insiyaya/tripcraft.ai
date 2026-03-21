@@ -30,7 +30,7 @@ const CATEGORY_ICON: Record<string, typeof Landmark> = {
 
 export default function ActivityCard({ activity, index, color, onClick }: Props) {
   const Icon = CATEGORY_ICON[activity.category] || MapPin;
-  const cc = useChatStore((s) => s.currencyInfo.code);
+  const { code: cc, rate_to_usd: rate } = useChatStore((s) => s.currencyInfo);
 
   return (
     <motion.div
@@ -60,7 +60,7 @@ export default function ActivityCard({ activity, index, color, onClick }: Props)
             <span>{activity.start_time} - {activity.end_time}</span>
           )}
           <span>{formatDuration(activity.estimated_duration_hrs)}</span>
-          <span>{formatCurrency(activity.cost_estimate_usd, cc)}</span>
+          <span>{formatCurrency(activity.cost_estimate_usd, cc, rate)}</span>
         </div>
 
         {activity.description && (

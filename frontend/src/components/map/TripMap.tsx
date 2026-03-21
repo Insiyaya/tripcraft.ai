@@ -109,7 +109,7 @@ interface Props {
 export default function TripMap({ itinerary }: Props) {
   const selectedDay = useUIStore((s) => s.selectedDay);
   const setSelectedActivity = useUIStore((s) => s.setSelectedActivity);
-  const cc = useChatStore((s) => s.currencyInfo.code);
+  const { code: cc, rate_to_usd: rate } = useChatStore((s) => s.currencyInfo);
 
   const daysToShow =
     selectedDay !== null && selectedDay >= 0 && selectedDay < itinerary.length
@@ -162,7 +162,7 @@ export default function TripMap({ itinerary }: Props) {
                         <br />
                         {activity.start_time} - {activity.end_time}
                         <br />
-                        {activity.category} | {formatCurrency(activity.cost_estimate_usd, cc)}
+                        {activity.category} | {formatCurrency(activity.cost_estimate_usd, cc, rate)}
                       </div>
                     </Popup>
                   </Marker>
