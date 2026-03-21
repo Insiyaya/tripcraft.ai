@@ -151,21 +151,22 @@ async def fetch_external_data(state: TripState) -> dict:
             except Exception:
                 updates["weather_forecast"] = []
 
-            # Fetch currency (try to detect from destination)
+            # Fetch currency — use user's selection, fall back to destination detection
             try:
-                currency_map = {
-                    "europe": "EUR", "france": "EUR", "germany": "EUR", "italy": "EUR",
-                    "spain": "EUR", "japan": "JPY", "uk": "GBP", "england": "GBP",
-                    "india": "INR", "thailand": "THB", "australia": "AUD",
-                    "canada": "CAD", "mexico": "MXN", "brazil": "BRL",
-                    "china": "CNY", "korea": "KRW", "turkey": "TRY",
-                }
-                dest_lower = state["destination"].lower()
-                currency_code = "USD"
-                for key, code in currency_map.items():
-                    if key in dest_lower:
-                        currency_code = code
-                        break
+                currency_code = state.get("currency", "USD")
+                if not currency_code or currency_code == "USD":
+                    currency_map = {
+                        "europe": "EUR", "france": "EUR", "germany": "EUR", "italy": "EUR",
+                        "spain": "EUR", "japan": "JPY", "uk": "GBP", "england": "GBP",
+                        "india": "INR", "thailand": "THB", "australia": "AUD",
+                        "canada": "CAD", "mexico": "MXN", "brazil": "BRL",
+                        "china": "CNY", "korea": "KRW", "turkey": "TRY",
+                    }
+                    dest_lower = state["destination"].lower()
+                    for key, code in currency_map.items():
+                        if key in dest_lower:
+                            currency_code = code
+                            break
 
                 if currency_code != "USD":
                     rate_data = await get_exchange_rate.ainvoke(currency_code)

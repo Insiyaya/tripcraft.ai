@@ -22,6 +22,7 @@ async def run_agent_stream(
         "start_date": trip["start_date"],
         "end_date": trip["end_date"],
         "budget_usd": trip["budget_usd"],
+        "currency": trip.get("currency", "USD"),
         "interests": trip.get("interests", []),
         "travelers": trip.get("travelers", 1),
         "accommodation_area": trip.get("accommodation_area", ""),

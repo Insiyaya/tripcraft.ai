@@ -38,6 +38,7 @@ class TripState(TypedDict, total=False):
     start_date: str
     end_date: str
     budget_usd: float
+    currency: str
     interests: list[str]
     travelers: int
     accommodation_area: str

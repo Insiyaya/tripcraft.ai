@@ -23,6 +23,7 @@ class TripCreate(BaseModel):
     start_date: str
     end_date: str
     budget_usd: float
+    currency: str = "USD"
     interests: list[str]
     travelers: int = 1
     accommodation_area: str = ""
