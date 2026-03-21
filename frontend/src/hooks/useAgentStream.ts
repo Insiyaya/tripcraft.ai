@@ -30,6 +30,7 @@ export function useAgentStream(tripId: string) {
     clearStreamingText,
     setItinerary,
     setDestinationInfo,
+    setCurrencyInfo,
   } = useChatStore();
 
   const handleEvent = useCallback(
@@ -61,6 +62,9 @@ export function useAgentStream(tripId: string) {
             }
             if (event.data.destination_info) {
               setDestinationInfo(cleanDestinationInfo(event.data.destination_info));
+            }
+            if (event.data.currency_info?.code) {
+              setCurrencyInfo(event.data.currency_info);
             }
           }
           break;
@@ -104,7 +108,7 @@ export function useAgentStream(tripId: string) {
     [
       addMessage, setCurrentPhase, setIsStreaming,
       appendStreamingToken, clearStreamingText,
-      setItinerary, setDestinationInfo,
+      setItinerary, setDestinationInfo, setCurrencyInfo,
     ]
   );
 

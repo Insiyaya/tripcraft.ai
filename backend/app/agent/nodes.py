@@ -7,11 +7,11 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 logger = logging.getLogger(__name__)
 
-RESEARCH_TIMEOUT_SEC = 90
+RESEARCH_TIMEOUT_SEC = 120
 PLAN_TIMEOUT_SEC = 180
-VALIDATE_TIMEOUT_SEC = 90
-OPTIMIZE_TIMEOUT_SEC = 120
-CHAT_TIMEOUT_SEC = 90
+VALIDATE_TIMEOUT_SEC = 120
+OPTIMIZE_TIMEOUT_SEC = 150
+CHAT_TIMEOUT_SEC = 120
 
 
 async def _invoke_with_timeout(llm, prompt: str, timeout_sec: int):
