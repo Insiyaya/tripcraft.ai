@@ -63,8 +63,10 @@ export function useAgentStream(tripId: string) {
             if (event.data.destination_info) {
               setDestinationInfo(cleanDestinationInfo(event.data.destination_info));
             }
-            if (event.data.currency_info?.code) {
-              setCurrencyInfo(event.data.currency_info);
+            const ciUpdate = event.data.currency_info;
+            if (ciUpdate && typeof ciUpdate === 'object' && 'code' in ciUpdate && typeof (ciUpdate as Record<string, unknown>).code === 'string') {
+              const { code, rate_to_usd } = ciUpdate as { code: string; rate_to_usd: number };
+              setCurrencyInfo({ code, rate_to_usd: rate_to_usd ?? 1 });
             }
           }
           break;
@@ -83,8 +85,10 @@ export function useAgentStream(tripId: string) {
           if (event.data?.destination_info) {
             setDestinationInfo(cleanDestinationInfo(event.data.destination_info));
           }
-          if ((event.data?.currency_info as { code?: string } | undefined)?.code) {
-            setCurrencyInfo(event.data!.currency_info as { code: string; rate_to_usd: number });
+          const ci = event.data?.currency_info;
+          if (ci && typeof ci === 'object' && 'code' in ci && typeof (ci as Record<string, unknown>).code === 'string') {
+            const { code, rate_to_usd } = ci as { code: string; rate_to_usd: number };
+            setCurrencyInfo({ code, rate_to_usd: rate_to_usd ?? 1 });
           }
           addMessage({
             role: 'assistant',
