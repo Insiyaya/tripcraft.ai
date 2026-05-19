@@ -46,7 +46,7 @@ export default function TripCard({ trip, onDelete }: Props) {
         <p>
           {formatDate(trip.start_date)} - {formatDate(trip.end_date)} ({days} days)
         </p>
-        <p>Budget: {formatCurrency(trip.budget_usd)} | {trip.travelers} traveler(s)</p>
+        <p>Budget: {formatCurrency(trip.budget_usd, trip.currency || 'USD', 1)} | {trip.travelers} traveler(s)</p>
         <div className="flex flex-wrap gap-1 mt-2">
           {trip.interests.map((i) => (
             <span
