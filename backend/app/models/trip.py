@@ -35,6 +35,7 @@ class TripUpdate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     budget_usd: Optional[float] = None
+    currency: Optional[str] = None
     interests: Optional[list[str]] = None
     travelers: Optional[int] = None
     accommodation_area: Optional[str] = None
@@ -48,6 +49,7 @@ class TripResponse(BaseModel):
     start_date: str
     end_date: str
     budget_usd: float
+    currency: str = "USD"
     interests: list[str]
     travelers: int
     accommodation_area: str

@@ -83,6 +83,9 @@ export function useAgentStream(tripId: string) {
           if (event.data?.destination_info) {
             setDestinationInfo(cleanDestinationInfo(event.data.destination_info));
           }
+          if ((event.data?.currency_info as { code?: string } | undefined)?.code) {
+            setCurrencyInfo(event.data!.currency_info as { code: string; rate_to_usd: number });
+          }
           addMessage({
             role: 'assistant',
             content: 'Your itinerary is ready! You can view it on the map and timeline. Feel free to ask me to make changes.',

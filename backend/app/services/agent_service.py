@@ -42,10 +42,9 @@ async def run_agent_stream(
     }
 
     if action == "chat" and trip.get("itinerary"):
-        config = {"configurable": {"thread_id": trip["_id"]}}
         initial_state["current_phase"] = "chat"
-    else:
-        config = {"configurable": {"thread_id": trip["_id"]}}
+
+    config = {"configurable": {"thread_id": trip["_id"]}}
 
     try:
         current_node = ""
@@ -95,6 +94,7 @@ async def run_agent_stream(
                 "data": {
                     "itinerary": serialized_itinerary,
                     "destination_info": accumulated_state.get("destination_info", ""),
+                    "currency_info": accumulated_state.get("currency_info", {}),
                 },
             }
 

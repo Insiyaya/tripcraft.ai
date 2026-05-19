@@ -5,6 +5,7 @@ export interface Trip {
   start_date: string;
   end_date: string;
   budget_usd: number;
+  currency?: string;
   interests: string[];
   travelers: number;
   accommodation_area: string;

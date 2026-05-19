@@ -1,4 +1,4 @@
-from langgraph.graph import END, StateGraph
+from langgraph.graph import END, START, StateGraph
 
 from .nodes import (
     fetch_external_data,
@@ -8,7 +8,15 @@ from .nodes import (
     research_destination,
     validate_itinerary,
 )
+
 from .state import TripState
+
+
+def _entry_router(state: TripState) -> str:
+    """Route initial invocation: chat messages go to handle_chat, otherwise start research."""
+    if state.get("current_phase") == "chat":
+        return "handle_chat"
+    return "research_destination"
 
 
 def _research_sufficient_check(state: TripState) -> str:
@@ -51,8 +59,12 @@ def build_graph() -> StateGraph:
     graph.add_node("optimize_route", optimize_route)
     graph.add_node("handle_chat", handle_chat)
 
-    # Set entry point
-    graph.set_entry_point("research_destination")
+    # Conditional entry: chat goes directly to handle_chat, generate starts research
+    graph.add_conditional_edges(
+        START,
+        _entry_router,
+        {"handle_chat": "handle_chat", "research_destination": "research_destination"},
+    )
 
     # Edges
     graph.add_edge("research_destination", "fetch_external_data")
