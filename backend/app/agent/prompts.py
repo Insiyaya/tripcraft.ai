@@ -2,7 +2,7 @@ RESEARCH_PROMPT = """You are a travel research expert. Research the destination 
 
 Destination: {destination}
 Travel dates: {start_date} to {end_date}
-Budget: ${budget_usd} USD for {travelers} traveler(s)
+Budget: {budget} for {travelers} traveler(s)
 Interests: {interests}
 Accommodation area: {accommodation_area}
 
@@ -59,9 +59,9 @@ Weather forecast:
 Create a detailed day-by-day itinerary following these rules:
 - Plan 3-5 activities per day, considering opening hours
 - Keep activities geographically close within each day to minimize travel
-- Respect the total budget (${budget_usd})
+- The total trip cost should come CLOSE to the full budget of ${budget_usd} USD. Do NOT under-spend drastically — if budget allows, include premium experiences, well-rated restaurants, guided tours, and notable paid attractions.
 - Schedule outdoor activities on days with better weather
-- Include meal breaks (lunch and dinner suggestions)
+- Include meal breaks (lunch and dinner suggestions) — choose restaurants proportional to the budget level
 - Start each day around 9:00 AM, end by 9:00 PM
 - Include realistic start_time and end_time for each activity
 

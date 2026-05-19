@@ -100,11 +100,19 @@ def _parse_json_response(text: str):
 async def research_destination(state: TripState) -> dict:
     """Research the destination and find attractions."""
     llm = get_llm()
+    currency_code = state.get("currency", "USD") or "USD"
+    raw_budget = state["budget_usd"]
+    # At research time we don't have the exchange rate yet; show budget in user's currency
+    budget_display = (
+        f"{raw_budget:,.0f} {currency_code}"
+        if currency_code != "USD"
+        else f"${raw_budget:,.0f} USD"
+    )
     prompt = RESEARCH_PROMPT.format(
         destination=state["destination"],
         start_date=state["start_date"],
         end_date=state["end_date"],
-        budget_usd=state["budget_usd"],
+        budget=budget_display,
         travelers=state.get("travelers", 1),
         interests=", ".join(state.get("interests", [])),
         accommodation_area=state.get("accommodation_area", "city center"),
@@ -133,13 +141,39 @@ async def fetch_external_data(state: TripState) -> dict:
     """Fetch weather, currency, and geocode data from free APIs."""
     updates = {"current_phase": "fetching_data"}
 
-    # Geocode destination for weather
+    # Always fetch currency — independent of geocoding so it never falls back silently to USD
+    try:
+        currency_code = state.get("currency", "USD")
+        if not currency_code or currency_code == "USD":
+            currency_map = {
+                "europe": "EUR", "france": "EUR", "germany": "EUR", "italy": "EUR",
+                "spain": "EUR", "japan": "JPY", "uk": "GBP", "england": "GBP",
+                "india": "INR", "thailand": "THB", "australia": "AUD",
+                "canada": "CAD", "mexico": "MXN", "brazil": "BRL",
+                "china": "CNY", "korea": "KRW", "turkey": "TRY",
+            }
+            dest_lower = state["destination"].lower()
+            for key, code in currency_map.items():
+                if key in dest_lower:
+                    currency_code = code
+                    break
+
+        if currency_code != "USD":
+            rate_data = await get_exchange_rate.ainvoke(currency_code)
+            updates["currency_info"] = {
+                "code": currency_code,
+                "rate_to_usd": rate_data.get("rates", {}).get(currency_code, 1.0),
+            }
+        else:
+            updates["currency_info"] = {"code": "USD", "rate_to_usd": 1.0}
+    except Exception:
+        updates["currency_info"] = {"code": "USD", "rate_to_usd": 1.0}
+
+    # Geocode destination then fetch weather (geo-dependent)
     try:
         geo = await geocode_place.ainvoke(state["destination"])
         if "error" not in geo:
             lat, lng = geo["lat"], geo["lng"]
-
-            # Fetch weather
             try:
                 weather = await get_weather_forecast.ainvoke({
                     "lat": lat,
@@ -150,34 +184,6 @@ async def fetch_external_data(state: TripState) -> dict:
                 updates["weather_forecast"] = _build_weather_list(weather, state)
             except Exception:
                 updates["weather_forecast"] = []
-
-            # Fetch currency — use user's selection, fall back to destination detection
-            try:
-                currency_code = state.get("currency", "USD")
-                if not currency_code or currency_code == "USD":
-                    currency_map = {
-                        "europe": "EUR", "france": "EUR", "germany": "EUR", "italy": "EUR",
-                        "spain": "EUR", "japan": "JPY", "uk": "GBP", "england": "GBP",
-                        "india": "INR", "thailand": "THB", "australia": "AUD",
-                        "canada": "CAD", "mexico": "MXN", "brazil": "BRL",
-                        "china": "CNY", "korea": "KRW", "turkey": "TRY",
-                    }
-                    dest_lower = state["destination"].lower()
-                    for key, code in currency_map.items():
-                        if key in dest_lower:
-                            currency_code = code
-                            break
-
-                if currency_code != "USD":
-                    rate_data = await get_exchange_rate.ainvoke(currency_code)
-                    updates["currency_info"] = {
-                        "code": currency_code,
-                        "rate_to_usd": rate_data.get("rates", {}).get(currency_code, 1.0),
-                    }
-                else:
-                    updates["currency_info"] = {"code": "USD", "rate_to_usd": 1.0}
-            except Exception:
-                updates["currency_info"] = {"code": "USD", "rate_to_usd": 1.0}
     except Exception:
         traceback.print_exc()
 
@@ -206,6 +212,17 @@ def _build_weather_list(weather_data: dict, state: TripState) -> list[dict]:
     return weather_list
 
 
+def _budget_in_usd(state: TripState) -> float:
+    """Return the user's budget converted to USD using the fetched exchange rate."""
+    currency_info = state.get("currency_info") or {}
+    rate = float(currency_info.get("rate_to_usd") or 1) or 1
+    code = currency_info.get("code", "USD")
+    raw = state["budget_usd"]
+    if code != "USD" and rate != 1:
+        return raw / rate
+    return raw
+
+
 async def plan_itinerary(state: TripState) -> dict:
     """Create a day-by-day itinerary from research data."""
     llm = get_llm(max_tokens=8192)
@@ -221,12 +238,14 @@ async def plan_itinerary(state: TripState) -> dict:
         if issues_text:
             validation_feedback = f"IMPORTANT: Fix these issues from the previous plan:\n{issues_text}"
 
+    budget_usd = _budget_in_usd(state)
+
     prompt = PLAN_PROMPT.format(
         destination=state["destination"],
         start_date=state["start_date"],
         end_date=state["end_date"],
         num_days=num_days,
-        budget_usd=state["budget_usd"],
+        budget_usd=round(budget_usd, 2),
         travelers=state.get("travelers", 1),
         interests=", ".join(state.get("interests", [])),
         attractions_json=json.dumps(state.get("attractions", []), indent=2),
@@ -313,7 +332,7 @@ async def validate_itinerary(state: TripState) -> dict:
 
     prompt = VALIDATE_PROMPT.format(
         destination=state["destination"],
-        budget_usd=state["budget_usd"],
+        budget_usd=round(_budget_in_usd(state), 2),
         num_days=num_days,
         itinerary_json=json.dumps(state.get("itinerary", []), indent=2),
     )
