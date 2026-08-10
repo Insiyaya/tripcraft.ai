@@ -143,8 +143,18 @@ async def fetch_external_data(state: TripState) -> dict:
 
     # Always fetch currency — independent of geocoding so it never falls back silently to USD
     try:
-        currency_code = state.get("currency", "USD")
-        if not currency_code or currency_code == "USD":
+        currency_code = (state.get("currency") or "").strip().upper()
+
+        # Only guess from the destination when no currency was supplied at all.
+        #
+        # This used to also fire when the currency was "USD", which silently
+        # broke every USD trip to a non-USD country: a $1000 budget for Tokyo
+        # was reinterpreted as JPY, so _budget_in_usd() divided by the JPY rate
+        # and told the planner it had about $7 to work with. It also left the
+        # trip card showing $1,000 while the itinerary priced everything in yen.
+        # The form always sends a currency, so an explicit "USD" is a real
+        # choice and must be honoured.
+        if not currency_code:
             currency_map = {
                 "europe": "EUR", "france": "EUR", "germany": "EUR", "italy": "EUR",
                 "spain": "EUR", "japan": "JPY", "uk": "GBP", "england": "GBP",
@@ -153,20 +163,36 @@ async def fetch_external_data(state: TripState) -> dict:
                 "china": "CNY", "korea": "KRW", "turkey": "TRY",
             }
             dest_lower = state["destination"].lower()
+            currency_code = "USD"
             for key, code in currency_map.items():
                 if key in dest_lower:
                     currency_code = code
                     break
 
-        if currency_code != "USD":
+        if currency_code and currency_code != "USD":
             rate_data = await get_exchange_rate.ainvoke(currency_code)
-            updates["currency_info"] = {
-                "code": currency_code,
-                "rate_to_usd": rate_data.get("rates", {}).get(currency_code, 1.0),
-            }
+            rate = rate_data.get("rate")
+            if rate:
+                updates["currency_info"] = {
+                    "code": currency_code,
+                    "rate_to_usd": float(rate),
+                }
+            else:
+                # No rate, so no honest way to show this currency. Presenting
+                # everything in USD keeps the figures and their symbol
+                # consistent; claiming the user's currency would not. The
+                # budget then reads as USD, which is why this is worth an alert.
+                logger.warning(
+                    "No exchange rate for %s (%s) — showing amounts in USD instead. "
+                    "The budget will be interpreted as USD.",
+                    currency_code,
+                    rate_data.get("error", "unknown error"),
+                )
+                updates["currency_info"] = {"code": "USD", "rate_to_usd": 1.0}
         else:
             updates["currency_info"] = {"code": "USD", "rate_to_usd": 1.0}
     except Exception:
+        logger.exception("Currency setup failed — falling back to USD")
         updates["currency_info"] = {"code": "USD", "rate_to_usd": 1.0}
 
     # Geocode destination then fetch weather (geo-dependent)

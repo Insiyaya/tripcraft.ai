@@ -7,9 +7,31 @@ export const API_BASE = `${API_BASE_URL}/api`;
 // only the email/password form — it must never block the rest of the app.
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
+/**
+ * Per-day identity colours for map markers, routes, and day badges.
+ *
+ * Deeper and earthier than the previous set so they sit on butter-yellow
+ * surfaces without shouting, while still being told apart at a glance.
+ *
+ * The order is deliberate and must not be reshuffled casually: these were
+ * validated for lightness band, chroma floor, colour-vision-deficiency
+ * separation between *adjacent* entries, and contrast against both the light and
+ * dark surfaces. Reordering changes which pairs are adjacent and can reintroduce
+ * a red/green clash — orange↔olive and crimson↔emerald both failed deuteranopia
+ * separation during tuning and had to be pulled apart.
+ *
+ * Pair with readableInkOn() from utils/color.ts for any label placed on one;
+ * a hardcoded white fails on the cyan.
+ */
 export const DAY_COLORS = [
-  '#3B82F6', '#EF4444', '#10B981', '#F59E0B',
-  '#8B5CF6', '#EC4899', '#06B6D4', '#F97316',
+  '#BE123C', // crimson
+  '#13A3C7', // cyan
+  '#A16207', // gold
+  '#7E22CE', // violet
+  '#4D7C0F', // olive
+  '#0369A1', // blue
+  '#C2410C', // rust
+  '#A21CAF', // fuchsia
 ];
 
 export const INTEREST_OPTIONS = [

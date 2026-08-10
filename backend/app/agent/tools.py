@@ -60,18 +60,37 @@ async def get_weather_forecast(
 
 @tool
 async def get_exchange_rate(currency_code: str) -> dict:
-    """Get exchange rate from USD to target currency using Frankfurter API."""
+    """Units of `currency_code` per 1 USD, via the Frankfurter API.
+
+    Returns {"rate": <float>} on success and {"error": "..."} on failure.
+
+    Deliberately never returns a fabricated rate of 1.0 on failure: a caller
+    cannot tell that apart from a genuine rate, so it ends up labelling USD
+    figures with another currency's symbol — showing a $500 hotel as ₹500.
+    Frankfurter is also ECB-backed and covers only ~30 currencies, so a
+    successful response can still omit the requested code.
+    """
+    code = (currency_code or "").strip().upper()
+    if not code or code == "USD":
+        return {"rate": 1.0}
+
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             resp = await client.get(
                 "https://api.frankfurter.dev/v1/latest",
-                params={"from": "USD", "to": currency_code},
+                params={"from": "USD", "to": code},
             )
             resp.raise_for_status()
-            return resp.json()
+            rate = resp.json().get("rates", {}).get(code)
     except Exception as e:
-        logger.warning("Exchange rate failed for %s: %s", currency_code, e)
-        return {"rates": {currency_code: 1.0}}
+        logger.warning("Exchange rate failed for %s: %s", code, e)
+        return {"error": str(e)}
+
+    if not isinstance(rate, (int, float)) or isinstance(rate, bool) or rate <= 0:
+        logger.warning("Frankfurter returned no usable rate for %s: %r", code, rate)
+        return {"error": f"no rate available for {code}"}
+
+    return {"rate": float(rate)}
 
 
 @tool

@@ -72,7 +72,9 @@ export default function ItineraryFlipGrid({ itinerary, destinationInfo, onViewDa
               </p>
             </div>
             <div>
-              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Budget</p>
+              {/* This is the summed cost of the plan, not the trip's budget —
+                  labelling it "Budget" contradicted the figure on the trip card. */}
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Est. cost</p>
               <p className="font-bold text-lg gradient-text">
                 {formatCurrency(totalCost, cc, rate)}
               </p>

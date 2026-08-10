@@ -232,7 +232,7 @@ export default function LoginPage() {
                 autoComplete="name"
                 maxLength={100}
                 disabled={submitting}
-                className="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50 disabled:opacity-60"
+                className="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-60"
                 style={inputStyle}
               />
             </label>
@@ -251,7 +251,7 @@ export default function LoginPage() {
               autoComplete="email"
               required
               disabled={submitting}
-              className="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50 disabled:opacity-60"
+              className="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-60"
               style={inputStyle}
             />
           </label>
@@ -272,7 +272,7 @@ export default function LoginPage() {
               required
               minLength={isRegister ? MIN_PASSWORD_LENGTH : undefined}
               disabled={submitting}
-              className="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50 disabled:opacity-60"
+              className="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-60"
               style={inputStyle}
             />
           </label>

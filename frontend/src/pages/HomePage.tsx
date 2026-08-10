@@ -20,19 +20,19 @@ const features = [
     icon: Search,
     title: 'Research',
     desc: 'AI finds top attractions for your interests',
-    gradient: 'from-blue-500 to-cyan-500',
+    gradient: 'from-amber-600 to-yellow-600',
   },
   {
     icon: CalendarDays,
     title: 'Plan',
     desc: 'Day-by-day itinerary with timing & budget',
-    gradient: 'from-violet-500 to-purple-500',
+    gradient: 'from-orange-700 to-amber-700',
   },
   {
     icon: Route,
     title: 'Optimize',
     desc: 'Routes optimized, shown on interactive map',
-    gradient: 'from-emerald-500 to-teal-500',
+    gradient: 'from-yellow-700 to-orange-800',
   },
 ];
 

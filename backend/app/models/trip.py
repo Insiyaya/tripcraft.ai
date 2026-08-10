@@ -22,6 +22,12 @@ class TripCreate(BaseModel):
     destination: str
     start_date: str
     end_date: str
+    # NOT in USD, despite the name. Holds the number the user typed, in the
+    # `currency` below — kept for backwards compatibility with stored documents.
+    # Itinerary costs (cost_estimate_usd, total_cost_usd) ARE in real USD, so the
+    # two must never be formatted the same way: converting this one again shows
+    # an Indian user their ₹80,000 budget as ₹6,640,000.
+    # nodes._budget_in_usd() divides by the exchange rate to get true USD.
     budget_usd: float
     currency: str = "USD"
     interests: list[str]

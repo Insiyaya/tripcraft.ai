@@ -6,6 +6,7 @@ import {
 import type { Activity } from '../../types/itinerary';
 import { formatDuration, formatCurrency } from '../../utils/formatters';
 import { useChatStore } from '../../store/chatStore';
+import { readableInkOn } from '../../utils/color';
 
 interface Props {
   activity: Activity;
@@ -41,8 +42,8 @@ export default function ActivityCard({ activity, index, color, onClick }: Props)
       style={{ borderColor: 'var(--color-border)' }}
     >
       <div
-        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-        style={{ backgroundColor: color }}
+        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+        style={{ backgroundColor: color, color: readableInkOn(color) }}
       >
         {index}
       </div>

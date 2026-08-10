@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { RotateCcw, Clock, MapPin, DollarSign, Sun, Map, Maximize2 } from 'lucide-react';
 import type { DayPlan } from '../../types/itinerary';
 import { DAY_COLORS } from '../../utils/constants';
+import { readableInkOn } from '../../utils/color';
 import { formatDate, formatCurrency, formatDuration } from '../../utils/formatters';
 import { useChatStore } from '../../store/chatStore';
 import ActivityCard from './ActivityCard';
@@ -46,8 +47,8 @@ export default function DayFlipCard({ day, index, onViewOnMap, onExpand }: Props
             {/* Day badge */}
             <div className="flex items-center justify-between mb-4">
               <div
-                className="px-4 py-2 rounded-xl text-white font-bold text-lg"
-                style={{ backgroundColor: color }}
+                className="px-4 py-2 rounded-xl font-bold text-lg"
+                style={{ backgroundColor: color, color: readableInkOn(color) }}
               >
                 Day {day.day_number}
               </div>
@@ -112,8 +113,8 @@ export default function DayFlipCard({ day, index, onViewOnMap, onExpand }: Props
             <div className="flex items-center justify-between p-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
               <div className="flex items-center gap-2">
                 <div
-                  className="px-2 py-1 rounded-lg text-white text-xs font-bold"
-                  style={{ backgroundColor: color }}
+                  className="px-2 py-1 rounded-lg text-xs font-bold"
+                  style={{ backgroundColor: color, color: readableInkOn(color) }}
                 >
                   Day {day.day_number}
                 </div>

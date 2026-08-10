@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { DayPlan } from '../../types/itinerary';
 import { DAY_COLORS } from '../../utils/constants';
+import { readableInkOn } from '../../utils/color';
 import { formatCurrency } from '../../utils/formatters';
 import { useChatStore } from '../../store/chatStore';
 import DayTimeline from './DayTimeline';
@@ -60,7 +61,10 @@ export default function ItineraryView({ itinerary, destinationInfo }: Props) {
               backgroundColor: selectedDay === idx
                 ? DAY_COLORS[idx % DAY_COLORS.length]
                 : 'var(--color-surface-tertiary)',
-              color: selectedDay === idx ? '#fff' : 'var(--color-text-secondary)',
+              color:
+                selectedDay === idx
+                  ? readableInkOn(DAY_COLORS[idx % DAY_COLORS.length])
+                  : 'var(--color-text-secondary)',
             }}
           >
             Day {day.day_number}

@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import L from 'leaflet';
 import type { DayPlan } from '../../types/itinerary';
 import { DAY_COLORS } from '../../utils/constants';
+import { readableInkOn } from '../../utils/color';
 import { useUIStore } from '../../store/uiStore';
 import { useChatStore } from '../../store/chatStore';
 import { formatCurrency } from '../../utils/formatters';
@@ -44,7 +45,7 @@ function createNumberedIcon(number: number, color: string) {
     className: '',
     html: `<div style="
       background-color: ${color};
-      color: white;
+      color: ${readableInkOn(color)};
       width: 28px;
       height: 28px;
       border-radius: 50%;

@@ -1,43 +1,52 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
-/* ── Theme Variables ── */
+/* ── Theme Variables ──────────────────────────────────────────────────────────
+   Butter yellow surfaces with brown ink and caramel accents.
+
+   Every text/background pair below was checked against WCAG rather than eyeballed;
+   the numbers in the comments are measured ratios. Dark mode is its own set of
+   steps, not an inversion of light — an inverted butter yellow reads as mustard
+   sludge, so the dark surfaces are deep coffee browns with cream ink and a
+   brighter gold accent that carries on a dark ground.
+   ────────────────────────────────────────────────────────────────────────────── */
 :root {
-  --color-surface: #ffffff;
-  --color-surface-secondary: #f8fafc;
-  --color-surface-tertiary: #f1f5f9;
-  --color-text-primary: #1e293b;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94a3b8;
-  --color-border: #e2e8f0;
-  --color-accent: #3b82f6;
-  --color-accent-hover: #2563eb;
-  --color-accent-light: #dbeafe;
-  --color-glass: rgba(255, 255, 255, 0.7);
-  --color-glass-border: rgba(255, 255, 255, 0.2);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+  --color-surface: #fffcf2;            /* cream card */
+  --color-surface-secondary: #faf1dc;  /* butter yellow page */
+  --color-surface-tertiary: #f2e4c4;   /* deeper butter, inputs & wells */
+  --color-text-primary: #3b2a17;       /* espresso   — 12.21:1 on page */
+  --color-text-secondary: #6b4f32;     /* mid brown  —  6.70:1 on page */
+  --color-text-muted: #7a6547;         /* soft brown —  4.94:1 on page, 5.41:1 on card */
+  --color-border: #e8d9b8;
+  --color-accent: #8a5a2b;             /* caramel    —  5.22:1 on page */
+  --color-accent-hover: #6f4620;
+  --color-accent-light: #f3e3c3;       /* accent on this — 4.64:1 */
+  --color-glass: rgba(255, 252, 242, 0.72);
+  --color-glass-border: rgba(232, 217, 184, 0.6);
+  /* Shadows carry a brown tint; neutral black shadows look dirty over butter. */
+  --shadow-sm: 0 1px 2px rgba(75, 52, 26, 0.07);
+  --shadow-md: 0 4px 6px -1px rgba(75, 52, 26, 0.1), 0 2px 4px -2px rgba(75, 52, 26, 0.07);
+  --shadow-lg: 0 10px 15px -3px rgba(75, 52, 26, 0.12), 0 4px 6px -4px rgba(75, 52, 26, 0.08);
+  --shadow-glow: 0 0 20px rgba(138, 90, 43, 0.18);
 }
 
 .dark {
-  --color-surface: #0f172a;
-  --color-surface-secondary: #1e293b;
-  --color-surface-tertiary: #334155;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #cbd5e1;
-  --color-text-muted: #64748b;
-  --color-border: #334155;
-  --color-accent: #60a5fa;
-  --color-accent-hover: #3b82f6;
-  --color-accent-light: rgba(59, 130, 246, 0.15);
-  --color-glass: rgba(15, 23, 42, 0.7);
-  --color-glass-border: rgba(51, 65, 85, 0.5);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(96, 165, 250, 0.2);
+  --color-surface: #1c1409;            /* darkest coffee */
+  --color-surface-secondary: #241a0e;  /* page */
+  --color-surface-tertiary: #332514;
+  --color-text-primary: #f7ead0;       /* butter cream — 14.35:1 on page */
+  --color-text-secondary: #dfc9a4;     /*              — 10.60:1 on page */
+  --color-text-muted: #a89070;         /*              —  5.60:1 on page */
+  --color-border: #3d2c18;
+  --color-accent: #e8b75a;             /* butter gold  —  9.24:1 on page */
+  --color-accent-hover: #f2c97a;
+  --color-accent-light: rgba(232, 183, 90, 0.16); /* accent on this — 7.39:1 */
+  --color-glass: rgba(28, 20, 9, 0.72);
+  --color-glass-border: rgba(61, 44, 24, 0.6);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 20px rgba(232, 183, 90, 0.22);
 }
 
 /* ── Base ── */
@@ -81,15 +90,15 @@ body {
 }
 
 .dark .leaflet-popup-content-wrapper {
-  background: #1e293b;
-  color: #f1f5f9;
+  background: #241a0e;
+  color: #f7ead0;
   border-radius: 0.5rem;
 }
 .dark .leaflet-popup-tip {
-  background: #1e293b;
+  background: #241a0e;
 }
 .dark .leaflet-popup-content-wrapper a {
-  color: #60a5fa;
+  color: #e8b75a;
 }
 
 /* ── Shimmer Animation ── */
@@ -109,12 +118,25 @@ body {
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* ── Gradient Utilities ── */
+/* ── Gradient Utilities ──────────────────────────────────────────────────────
+   Both stops of gradient-primary stay dark enough for white button text
+   (5.26:1 and 8.16:1), which the lighter caramels did not manage.
+   ────────────────────────────────────────────────────────────────────────────── */
 .gradient-primary {
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  background: linear-gradient(135deg, #96601f, #6f4620);
 }
+
 .gradient-text {
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  background: linear-gradient(135deg, #96601f, #6f4620);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* gradient-text is ink, not a fill, so dark mode needs its own steps. Reusing
+   the brown above would paint near-black text onto a near-black surface. */
+.dark .gradient-text {
+  background: linear-gradient(135deg, #f2c97a, #d99a3c);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

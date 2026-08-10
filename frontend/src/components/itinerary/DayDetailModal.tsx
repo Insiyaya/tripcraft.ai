@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { X, Clock, MapPin, DollarSign, Sun, Star, Map } from 'lucide-react';
 import type { DayPlan } from '../../types/itinerary';
 import { DAY_COLORS } from '../../utils/constants';
+import { readableInkOn } from '../../utils/color';
 import { formatDate, formatCurrency, formatDuration } from '../../utils/formatters';
 import { useChatStore } from '../../store/chatStore';
 import { cn } from '../../lib/utils';
@@ -71,8 +72,8 @@ export default function DayDetailModal({ day, index, onClose, onViewOnMap }: Pro
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div
-                className="px-4 py-2 rounded-xl text-white font-bold text-lg"
-                style={{ backgroundColor: color }}
+                className="px-4 py-2 rounded-xl font-bold text-lg"
+                style={{ backgroundColor: color, color: readableInkOn(color) }}
               >
                 Day {day.day_number}
               </div>
@@ -134,8 +135,8 @@ export default function DayDetailModal({ day, index, onClose, onViewOnMap }: Pro
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                    style={{ backgroundColor: color }}
+                    className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                    style={{ backgroundColor: color, color: readableInkOn(color) }}
                   >
                     {actIdx + 1}
                   </div>

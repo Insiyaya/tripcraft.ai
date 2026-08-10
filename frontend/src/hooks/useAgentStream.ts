@@ -63,11 +63,8 @@ export function useAgentStream(tripId: string) {
             if (event.data.destination_info) {
               setDestinationInfo(cleanDestinationInfo(event.data.destination_info));
             }
-            const ciUpdate = event.data.currency_info;
-            if (ciUpdate && typeof ciUpdate === 'object' && 'code' in ciUpdate && typeof (ciUpdate as Record<string, unknown>).code === 'string') {
-              const { code, rate_to_usd } = ciUpdate as { code: string; rate_to_usd: number };
-              setCurrencyInfo({ code, rate_to_usd: rate_to_usd ?? 1 });
-            }
+            // setCurrencyInfo validates and falls back to USD, so no guard here.
+            if (event.data.currency_info) setCurrencyInfo(event.data.currency_info);
           }
           break;
 
@@ -85,11 +82,7 @@ export function useAgentStream(tripId: string) {
           if (event.data?.destination_info) {
             setDestinationInfo(cleanDestinationInfo(event.data.destination_info));
           }
-          const ci = event.data?.currency_info;
-          if (ci && typeof ci === 'object' && 'code' in ci && typeof (ci as Record<string, unknown>).code === 'string') {
-            const { code, rate_to_usd } = ci as { code: string; rate_to_usd: number };
-            setCurrencyInfo({ code, rate_to_usd: rate_to_usd ?? 1 });
-          }
+          if (event.data?.currency_info) setCurrencyInfo(event.data.currency_info);
           addMessage({
             role: 'assistant',
             content: 'Your itinerary is ready! You can view it on the map and timeline. Feel free to ask me to make changes.',
