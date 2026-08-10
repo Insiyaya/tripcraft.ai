@@ -1,8 +1,10 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pymongo.errors import PyMongoError
 
 from .config import settings
 from .database import connect_db, close_db
@@ -60,6 +62,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(PyMongoError)
+async def database_error_handler(request: Request, exc: PyMongoError) -> JSONResponse:
+    """Turn database faults into 503 instead of a bare 500.
+
+    Motor connects lazily, so a bad MONGO_URI lets the app start and then fails
+    on the first query. Every route that touches a collection would otherwise
+    answer "Internal Server Error" with nothing to act on. 503 says it's the
+    dependency, and the traceback goes to the log. Check /api/health to confirm.
+    """
+    logger.exception("Database error on %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "The database is unavailable. Please try again shortly."},
+    )
+
 
 @app.get("/")
 async def root():
