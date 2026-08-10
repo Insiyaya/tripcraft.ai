@@ -14,5 +14,5 @@ python-dotenv
 websockets
 aiohttp
 PyJWT
-google-auth
-requests
+bcrypt
+email-validator

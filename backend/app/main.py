@@ -4,16 +4,27 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .config import settings
 from .database import connect_db, close_db
 from .routers import health, trips, itinerary, chat, auth
 
 logger = logging.getLogger(__name__)
 
 
+def _check_auth_config() -> None:
+    """Warn loudly about auth config gaps that only surface as failed logins."""
+    if settings.jwt_secret_key == "change-me-in-production":
+        logger.warning(
+            "JWT_SECRET_KEY is still the default value — anyone can forge a session "
+            "token. Set a random secret before deploying."
+        )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_db()
     logger.info("CORS origins: %s", cors_origins)
+    _check_auth_config()
     yield
     await close_db()
 
