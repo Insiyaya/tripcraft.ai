@@ -10,7 +10,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pymongo.errors import DuplicateKeyError
 
 from ..config import settings
-from ..database import get_database
+from ..database import ensure_indexes, get_database
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +102,28 @@ async def register_user(email: str, password: str, name: str) -> dict:
     name = name.strip() or email.split("@")[0]
     now = datetime.now(timezone.utc)
 
+    db = get_database()
+
+    # Retry index creation here rather than trusting the one attempt at startup:
+    # if the database was unreachable then, this is the point where it matters.
+    index_ready = await ensure_indexes()
+
+    # Non-atomic pre-check. Two concurrent signups can both pass it, which is
+    # why the unique index is the real guard — but when the index could not be
+    # built this is the only thing standing between a repeat signup and a
+    # duplicate account, so it is not redundant.
+    if await db.users.find_one({"email": email}, {"_id": 1}) is not None:
+        raise HTTPException(
+            status_code=409, detail="An account with that email already exists."
+        )
+
+    if not index_ready:
+        logger.error(
+            "Registering %s without the unique email index in place — concurrent "
+            "signups for this address could still create duplicates.",
+            email,
+        )
+
     user_doc = {
         "email": email,
         "name": name,
@@ -111,12 +133,10 @@ async def register_user(email: str, password: str, name: str) -> dict:
         "last_login": now,
     }
 
-    db = get_database()
     try:
         result = await db.users.insert_one(user_doc)
     except DuplicateKeyError:
-        # The unique index on `email` is what actually prevents duplicates — a
-        # read-then-insert check would still let two concurrent signups through.
+        # Lost the race against a concurrent signup; the index caught it.
         raise HTTPException(
             status_code=409, detail="An account with that email already exists."
         )
