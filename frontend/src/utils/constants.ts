@@ -3,6 +3,10 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 export const API_BASE = `${API_BASE_URL}/api`;
 
+// Optional. Empty means Google sign-in is unavailable and the login page shows
+// only the email/password form — it must never block the rest of the app.
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
 export const DAY_COLORS = [
   '#3B82F6', '#EF4444', '#10B981', '#F59E0B',
   '#8B5CF6', '#EC4899', '#06B6D4', '#F97316',

@@ -1,9 +1,13 @@
 import logging
+import threading
 from datetime import datetime, timezone, timedelta
 from typing import Any
 
 import bcrypt
 import jwt
+from google.auth import exceptions as google_auth_exceptions
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 from fastapi import Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -158,17 +162,16 @@ async def authenticate_user(email: str, password: str) -> dict:
     password_ok = await verify_password(password, stored_hash or _DUMMY_HASH)
 
     if user and not stored_hash:
-        # Account predates password auth (created via the old Google sign-in), so
-        # there is no password to check. Deliberately NOT offering to set one
-        # here: without email verification, "claim the account for this address"
-        # hands whoever types the email every trip the original user saved.
-        # Migrating these accounts is a one-time admin job — see the note in
-        # backend/README-auth.md.
-        logger.warning("Login attempt on a password-less legacy account: %s", email)
+        # Account has no password because it was created through Google sign-in.
+        # Still deliberately NOT offering to set one here: without verifying the
+        # address ourselves, "claim this account" hands whoever types the email
+        # every trip the original user saved. Google sign-in is the safe route,
+        # since Google verifies ownership — so point them at it.
+        logger.info("Password login attempted on a Google-only account: %s", email)
         raise HTTPException(
             status_code=409,
-            detail="This account predates password sign-in and needs to be migrated. "
-            "Please contact support.",
+            detail="This account uses Google sign-in. Please use the "
+            '"Sign in with Google" button above.',
         )
 
     if not user or not password_ok:
@@ -179,6 +182,156 @@ async def authenticate_user(email: str, password: str) -> dict:
     )
 
     return _public_user(user)
+
+
+# --- Google sign-in -------------------------------------------------------
+#
+# An additional sign-in method, not a replacement. Everything below is inert
+# when GOOGLE_CLIENT_ID is unset.
+
+# Tolerate small clock drift against Google, otherwise a token minted moments
+# ago can be rejected as "used too early".
+_CLOCK_SKEW_SECONDS = 10
+
+# google.auth.transport.requests.Request wraps a requests.Session, which is not
+# thread-safe. Verification runs in a threadpool, so give each worker thread its
+# own transport rather than sharing one process-wide.
+_transport_local = threading.local()
+
+
+def google_sign_in_enabled() -> bool:
+    return bool(settings.google_client_id)
+
+
+def _get_transport() -> google_requests.Request:
+    transport = getattr(_transport_local, "transport", None)
+    if transport is None:
+        transport = google_requests.Request()
+        _transport_local.transport = transport
+    return transport
+
+
+def _verify_google_token_sync(credential: str) -> dict[str, Any]:
+    return id_token.verify_oauth2_token(
+        credential,
+        _get_transport(),
+        audience=settings.google_client_id,
+        clock_skew_in_seconds=_CLOCK_SKEW_SECONDS,
+    )
+
+
+async def verify_google_token(credential: str) -> dict[str, Any]:
+    """Verify a Google ID token and return its payload."""
+    if not google_sign_in_enabled():
+        # Without an audience, google-auth compares `aud` against "" and every
+        # sign-in fails as if the token were bad. Report the real cause.
+        logger.error("GOOGLE_CLIENT_ID is not set — cannot verify Google ID tokens")
+        raise HTTPException(
+            status_code=503,
+            detail="Google sign-in is not configured on this server. "
+            "Use your email and password instead.",
+        )
+
+    try:
+        # Blocking HTTPS call to fetch Google's signing certs — keep it off the
+        # event loop so one slow sign-in doesn't stall every other request.
+        return await run_in_threadpool(_verify_google_token_sync, credential)
+    except google_auth_exceptions.TransportError as err:
+        # We couldn't reach Google, so we don't know whether the token is good.
+        # A 401 here would blame the user for an upstream outage.
+        logger.error("Could not reach Google to verify ID token: %s", err)
+        raise HTTPException(
+            status_code=503,
+            detail="Could not reach Google to verify your sign-in. Please try again.",
+        )
+    except ValueError as err:
+        # google-auth signals every genuine token problem as ValueError: bad
+        # signature, expired, wrong audience, wrong issuer.
+        logger.warning("Google token verification failed: %s", err)
+        raise HTTPException(status_code=401, detail=f"Invalid Google token: {err}")
+    except Exception:
+        logger.exception("Unexpected error verifying Google ID token")
+        raise HTTPException(
+            status_code=500, detail="Sign-in failed due to a server error."
+        )
+
+
+async def find_or_create_google_user(google_payload: dict[str, Any]) -> dict:
+    """Resolve a verified Google identity to an account, linking where safe."""
+    google_sub = google_payload.get("sub") or ""
+    if not google_sub:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+
+    # Google omits these when the scope wasn't granted and sends null in some
+    # flows, so `.get(key, default)` isn't enough.
+    raw_email = (google_payload.get("email") or "").strip()
+    email = raw_email.lower()
+    email_verified = bool(google_payload.get("email_verified"))
+    google_name = (google_payload.get("name") or "").strip()
+    picture = google_payload.get("picture") or ""
+
+    db = get_database()
+    now = datetime.now(timezone.utc)
+
+    # google_sub is the stable identifier; email can change hands.
+    user = await db.users.find_one({"google_sub": google_sub})
+
+    if not user and email and email_verified:
+        # Link to an existing account on the same address — including one that
+        # signed up with a password. Safe in this direction only: Google has
+        # verified the address, so it can't be claimed by someone who merely
+        # knows it. Never adopt an account already tied to a *different* Google
+        # identity, which would be a takeover.
+        candidate = await db.users.find_one(
+            {
+                "email": {"$in": list({email, raw_email})},
+                "google_sub": {"$in": [None, "", google_sub]},
+            }
+        )
+        if candidate:
+            user = candidate
+            logger.info("Linking Google identity to existing account %s", email)
+
+    if user:
+        updates = {
+            "google_sub": google_sub,
+            "email_verified": email_verified,
+            "last_login": now,
+        }
+        if picture:
+            updates["picture"] = picture
+        # Don't overwrite a name the account already has — only fill a blank.
+        if google_name and not (user.get("name") or "").strip():
+            updates["name"] = google_name
+        await db.users.update_one({"_id": user["_id"]}, {"$set": updates})
+        user.update(updates)
+        return _public_user(user)
+
+    await ensure_indexes()
+
+    user_doc = {
+        "email": email,
+        "email_verified": email_verified,
+        "name": google_name or (email.split("@")[0] if email else "TripCraft User"),
+        "picture": picture,
+        "google_sub": google_sub,
+        # No password_hash: this account signs in with Google. Registering the
+        # same address later is refused, as it should be.
+        "created_at": now,
+        "last_login": now,
+    }
+
+    try:
+        result = await db.users.insert_one(user_doc)
+    except DuplicateKeyError:
+        # Raced another sign-in for the same address; re-read the winner.
+        existing = await db.users.find_one({"email": email})
+        if existing:
+            return _public_user(existing)
+        raise
+
+    user_doc["_id"] = result.inserted_id
+    return _public_user(user_doc)
 
 
 async def _get_user_by_id(user_id: str) -> dict:

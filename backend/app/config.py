@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     mongo_uri: str = "mongodb://localhost:27017"
     database_name: str = "travel_planner"
+    # Optional. When empty, Google sign-in is simply unavailable and
+    # email/password still works — it is an additional method, not a dependency.
+    google_client_id: str = ""
     jwt_secret_key: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
     jwt_expiry_days: int = 7

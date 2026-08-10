@@ -16,3 +16,5 @@ aiohttp
 PyJWT
 bcrypt
 email-validator
+google-auth
+requests

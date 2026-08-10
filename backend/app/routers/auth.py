@@ -9,8 +9,10 @@ from ..services.auth_service import (
     MIN_PASSWORD_LENGTH,
     authenticate_user,
     create_jwt,
+    find_or_create_google_user,
     get_current_user,
     register_user,
+    verify_google_token,
 )
 
 router = APIRouter()
@@ -47,6 +49,10 @@ class LoginRequest(BaseModel):
     password: ExistingPassword
 
 
+class GoogleLoginRequest(BaseModel):
+    credential: str = Field(min_length=1)
+
+
 class LoginResponse(BaseModel):
     token: str
     user: UserResponse
@@ -63,6 +69,19 @@ async def register(body: RegisterRequest):
 async def login(body: LoginRequest):
     """Exchange email + password for a JWT."""
     user = await authenticate_user(body.email, body.password)
+    return {"token": create_jwt(user["_id"]), "user": user}
+
+
+@router.post("/auth/google", response_model=LoginResponse)
+async def google_login(body: GoogleLoginRequest):
+    """Exchange a Google ID token for our own JWT.
+
+    Links to an existing account on the same verified address, so someone who
+    signed up with a password can also sign in with Google, and accounts created
+    by the earlier Google-only flow keep working.
+    """
+    google_payload = await verify_google_token(body.credential)
+    user = await find_or_create_google_user(google_payload)
     return {"token": create_jwt(user["_id"]), "user": user}
 
 

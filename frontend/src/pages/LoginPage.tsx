@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { motion } from 'framer-motion';
 import { Plane, Mail, Lock, User as UserIcon } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { API_BASE } from '../utils/constants';
+import { API_BASE, GOOGLE_CLIENT_ID } from '../utils/constants';
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -55,6 +56,66 @@ export default function LoginPage() {
     setPassword('');
   };
 
+  /** Shared tail of every sign-in path: store the session and let the redirect fire. */
+  const applyAuth = (payload: { token: string; user: Record<string, unknown> }) => {
+    const u = payload.user;
+    setAuth(
+      {
+        id: (u.id || u._id) as string,
+        name: u.name as string,
+        email: u.email as string,
+        picture: u.picture as string | undefined,
+      },
+      payload.token,
+    );
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
+    const credential = credentialResponse.credential;
+    if (!credential) {
+      setError('Google returned no credential. Please try again.');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const resp = await fetch(`${API_BASE}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      });
+
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(parseErrorDetail(data, resp.status));
+      }
+
+      applyAuth(await resp.json());
+    } catch (err) {
+      setSubmitting(false);
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : 'Could not reach the server. Please try again.',
+      );
+    }
+  };
+
+  // Google Identity Services doesn't pass a reason to onError — it only logs to
+  // the console. In practice this fires when the page's origin isn't an
+  // Authorized JavaScript origin for the client ID, so name that rather than
+  // suggesting a retry that will fail identically.
+  const handleGoogleError = () => {
+    setSubmitting(false);
+    setError(
+      `Google rejected the sign-in request from ${window.location.origin}. ` +
+        'Check that this exact origin is listed under "Authorized JavaScript origins" ' +
+        'for the OAuth client. You can still sign in with your email and password.',
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
@@ -81,16 +142,7 @@ export default function LoginPage() {
         throw new Error(parseErrorDetail(data, resp.status));
       }
 
-      const { token, user: userData } = await resp.json();
-      setAuth(
-        {
-          id: userData.id || userData._id,
-          name: userData.name,
-          email: userData.email,
-          picture: userData.picture,
-        },
-        token,
-      );
+      applyAuth(await resp.json());
       // Leave `submitting` set — the redirect effect above unmounts this page.
     } catch (err) {
       setSubmitting(false);
@@ -140,6 +192,30 @@ export default function LoginPage() {
         <p className="text-sm mb-8 text-center" style={{ color: 'var(--color-text-secondary)' }}>
           {isRegister ? 'Create an account to start planning' : 'Sign in to plan your perfect trip'}
         </p>
+
+        {/* Google sign-in. Rendered only when a client ID is configured, so the
+            email/password form below is never blocked by a missing build var. */}
+        {GOOGLE_CLIENT_ID && (
+          <>
+            <div className="flex justify-center" aria-busy={submitting}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="outline"
+                size="large"
+                width="300"
+                text={isRegister ? 'signup_with' : 'signin_with'}
+              />
+            </div>
+            <div className="flex items-center gap-3 my-1">
+              <span className="h-px flex-1" style={{ backgroundColor: 'var(--color-border)' }} />
+              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                or
+              </span>
+              <span className="h-px flex-1" style={{ backgroundColor: 'var(--color-border)' }} />
+            </div>
+          </>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {isRegister && (
