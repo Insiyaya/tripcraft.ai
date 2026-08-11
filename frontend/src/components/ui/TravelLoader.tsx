@@ -155,7 +155,7 @@ export default function TravelLoader({ phase }: Props) {
                   'h-1.5 w-full rounded-full transition-all duration-500',
                   isDone && 'bg-emerald-500',
                   isActive && 'bg-gradient-to-r from-amber-500 to-amber-700 animate-pulse',
-                  !isDone && !isActive && 'bg-gray-200 dark:bg-gray-700',
+                  !isDone && !isActive && 'bg-amber-200/60',
                 )}
               />
             </div>
@@ -220,8 +220,8 @@ function RotatingFacts() {
           className={cn(
             'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full',
             item.type === 'fact'
-              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-              : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+              ? 'bg-amber-100 text-amber-800'
+              : 'bg-orange-100 text-orange-800',
           )}
         >
           {item.type === 'fact' ? 'Did you know?' : 'Travel tip'}

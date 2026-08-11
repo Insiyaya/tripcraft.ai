@@ -2,51 +2,45 @@
 @import "leaflet/dist/leaflet.css";
 
 /* ── Theme Variables ──────────────────────────────────────────────────────────
-   Butter yellow surfaces with brown ink and caramel accents.
+   Vibrant butter yellow surfaces with brown ink and caramel accents.
 
-   Every text/background pair below was checked against WCAG rather than eyeballed;
-   the numbers in the comments are measured ratios. Dark mode is its own set of
-   steps, not an inversion of light — an inverted butter yellow reads as mustard
-   sludge, so the dark surfaces are deep coffee browns with cream ink and a
-   brighter gold accent that carries on a dark ground.
+   Single theme by design — there is no dark mode and no `.dark` selector. Nothing
+   toggles the palette, so every value here is the only value, and adding a
+   `dark:` variant to a component would be dead code.
+
+   Every text/background pair was measured against WCAG rather than eyeballed; the
+   ratios in the comments are the real numbers. Anything that failed was re-stepped
+   until it passed, so treat these as constraints rather than preferences.
    ────────────────────────────────────────────────────────────────────────────── */
 :root {
-  --color-surface: #fffcf2;            /* cream card */
-  --color-surface-secondary: #faf1dc;  /* butter yellow page */
-  --color-surface-tertiary: #f2e4c4;   /* deeper butter, inputs & wells */
-  --color-text-primary: #3b2a17;       /* espresso   — 12.21:1 on page */
-  --color-text-secondary: #6b4f32;     /* mid brown  —  6.70:1 on page */
-  --color-text-muted: #7a6547;         /* soft brown —  4.94:1 on page, 5.41:1 on card */
-  --color-border: #e8d9b8;
-  --color-accent: #8a5a2b;             /* caramel    —  5.22:1 on page */
+  /* A vibrant butter yellow page with cream cards floating on it. Ratios below
+     are measured against the page unless noted. */
+  --color-surface: #fffdf5;            /* cream card */
+  --color-surface-secondary: #ffe066;  /* vibrant butter yellow page */
+  --color-surface-tertiary: #fff8e1;   /* inputs & wells */
+  --color-text-primary: #3b2a17;       /* espresso   — 10.53:1 */
+  --color-text-secondary: #6b4f32;     /* mid brown  —  5.77:1 */
+  --color-text-muted: #6e5a3d;         /* soft brown —  5.04:1, 6.46:1 on card */
+  --color-accent: #7d4f1e;             /* caramel    —  5.35:1, 6.85:1 on card */
   --color-accent-hover: #6f4620;
-  --color-accent-light: #f3e3c3;       /* accent on this — 4.64:1 */
-  --color-glass: rgba(255, 252, 242, 0.72);
-  --color-glass-border: rgba(232, 217, 184, 0.6);
-  /* Shadows carry a brown tint; neutral black shadows look dirty over butter. */
-  --shadow-sm: 0 1px 2px rgba(75, 52, 26, 0.07);
-  --shadow-md: 0 4px 6px -1px rgba(75, 52, 26, 0.1), 0 2px 4px -2px rgba(75, 52, 26, 0.07);
-  --shadow-lg: 0 10px 15px -3px rgba(75, 52, 26, 0.12), 0 4px 6px -4px rgba(75, 52, 26, 0.08);
-  --shadow-glow: 0 0 20px rgba(138, 90, 43, 0.18);
-}
+  --color-accent-light: #fff3c4;       /* accent on this — comfortably past 4.5:1 */
 
-.dark {
-  --color-surface: #1c1409;            /* darkest coffee */
-  --color-surface-secondary: #241a0e;  /* page */
-  --color-surface-tertiary: #332514;
-  --color-text-primary: #f7ead0;       /* butter cream — 14.35:1 on page */
-  --color-text-secondary: #dfc9a4;     /*              — 10.60:1 on page */
-  --color-text-muted: #a89070;         /*              —  5.60:1 on page */
-  --color-border: #3d2c18;
-  --color-accent: #e8b75a;             /* butter gold  —  9.24:1 on page */
-  --color-accent-hover: #f2c97a;
-  --color-accent-light: rgba(232, 183, 90, 0.16); /* accent on this — 7.39:1 */
-  --color-glass: rgba(28, 20, 9, 0.72);
-  --color-glass-border: rgba(61, 44, 24, 0.6);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.45);
-  --shadow-glow: 0 0 20px rgba(232, 183, 90, 0.22);
+  /* Two border weights on purpose. The vibrant page is bright enough that no
+     input fill can reach 3:1 against it (white manages only 1.30), so an input's
+     boundary is the only thing that identifies it as a field. `strong` carries
+     that job at 4.00:1 against the fill; `border` stays light because a card
+     edge is decoration and a 3:1 outline on every card looks like a wireframe. */
+  --color-border: #e8c84a;
+  --color-border-strong: #9a7b2e;      /* form fields — 4.00:1 vs fill, 3.07:1 vs page */
+
+  --color-glass: rgba(255, 253, 245, 0.78);
+  --color-glass-border: rgba(154, 123, 46, 0.28);
+
+  /* Shadows carry a brown tint; neutral black shadows look dirty over yellow. */
+  --shadow-sm: 0 1px 2px rgba(75, 52, 26, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(75, 52, 26, 0.12), 0 2px 4px -2px rgba(75, 52, 26, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(75, 52, 26, 0.15), 0 4px 6px -4px rgba(75, 52, 26, 0.1);
+  --shadow-glow: 0 0 20px rgba(125, 79, 30, 0.2);
 }
 
 /* ── Base ── */
@@ -89,17 +83,6 @@ body {
   border-radius: 0.75rem;
 }
 
-.dark .leaflet-popup-content-wrapper {
-  background: #241a0e;
-  color: #f7ead0;
-  border-radius: 0.5rem;
-}
-.dark .leaflet-popup-tip {
-  background: #241a0e;
-}
-.dark .leaflet-popup-content-wrapper a {
-  color: #e8b75a;
-}
 
 /* ── Shimmer Animation ── */
 @keyframes shimmer {
@@ -119,25 +102,20 @@ body {
 }
 
 /* ── Gradient Utilities ──────────────────────────────────────────────────────
-   Both stops of gradient-primary stay dark enough for white button text
-   (5.26:1 and 8.16:1), which the lighter caramels did not manage.
+   These two look similar but answer opposite questions, so they do not share
+   stops. gradient-primary is a *fill* carrying white text, so its stops must be
+   dark enough for white to read on them (5.26:1 and 8.16:1). gradient-text is
+   *ink* on the vibrant page, so its stops must be dark enough to read on yellow —
+   and #96601f only reached 4.04:1 there, under the 4.5:1 needed.
    ────────────────────────────────────────────────────────────────────────────── */
 .gradient-primary {
   background: linear-gradient(135deg, #96601f, #6f4620);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #96601f, #6f4620);
+  background: linear-gradient(135deg, #7d4f1e, #5a3a17);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* gradient-text is ink, not a fill, so dark mode needs its own steps. Reusing
-   the brown above would paint near-black text onto a near-black surface. */
-.dark .gradient-text {
-  background: linear-gradient(135deg, #f2c97a, #d99a3c);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}

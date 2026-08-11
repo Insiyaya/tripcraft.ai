@@ -22,10 +22,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const TILE_URLS = {
-  light: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-};
+// Single theme, so a single basemap. CARTO Voyager is the warm-toned one, which
+// sits better under the butter-yellow chrome than their neutral grey.
+const TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
 function parseCoordinate(value: unknown): number | null {
   const parsed = typeof value === 'number' ? value : Number(value);
@@ -81,24 +80,11 @@ function FitBounds({ days }: { days: DayPlan[] }) {
   return null;
 }
 
-function ThemeTileLayer() {
-  const theme = useUIStore((s) => s.theme);
-  const map = useMap();
-
-  // Determine if dark mode
-  const isDark = theme === 'dark';
-  const url = isDark ? TILE_URLS.dark : TILE_URLS.light;
-
-  // Force re-render tile layer when theme changes
-  useEffect(() => {
-    map.invalidateSize();
-  }, [isDark, map]);
-
+function BaseTileLayer() {
   return (
     <TileLayer
-      key={isDark ? 'dark' : 'light'}
       attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-      url={url}
+      url={TILE_URL}
     />
   );
 }
@@ -123,7 +109,7 @@ export default function TripMap({ itinerary }: Props) {
       zoom={13}
       className="h-full w-full rounded-xl"
     >
-      <ThemeTileLayer />
+      <BaseTileLayer />
       <FitBounds days={daysToShow} />
 
       {daysToShow.map((day) => {

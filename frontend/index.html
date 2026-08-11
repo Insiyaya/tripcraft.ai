@@ -12,16 +12,11 @@
   <body>
     <div id="root">
       <style>
-        /* Painted before React mounts, so it cannot read the theme store and has
-           to guess. prefers-color-scheme is the closest available signal —
-           without it this flashed a dark slate panel ahead of a butter-yellow
-           app on every cold load. */
-        .init-loader{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#faf1dc}
-        .init-spinner{width:40px;height:40px;border:4px solid #8a5a2b;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
-        @media (prefers-color-scheme: dark){
-          .init-loader{background:#241a0e}
-          .init-spinner{border-color:#e8b75a;border-top-color:transparent}
-        }
+        /* Painted before React mounts. With one theme there is nothing to guess:
+           these are the same values as --color-surface-secondary and
+           --color-accent, so the first frame already matches the app. */
+        .init-loader{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#ffe066}
+        .init-spinner{width:40px;height:40px;border:4px solid #7d4f1e;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
       </style>
       <div class="init-loader"><div class="init-spinner"></div></div>

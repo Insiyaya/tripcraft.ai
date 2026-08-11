@@ -158,7 +158,7 @@ export default function LoginPage() {
 
   const inputStyle = {
     backgroundColor: 'var(--color-surface-tertiary)',
-    borderColor: 'var(--color-border)',
+    borderColor: 'var(--color-border-strong)',
     color: 'var(--color-text-primary)',
   };
 

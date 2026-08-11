@@ -148,8 +148,10 @@ export default function ChatPanel({ onSendMessage }: Props) {
           disabled={isStreaming}
           className="flex-1 px-3.5 py-2 rounded-xl text-sm outline-none transition-shadow duration-200 border"
           style={{
-            backgroundColor: 'var(--color-surface-secondary)',
-            borderColor: 'var(--color-border)',
+            // tertiary, not secondary: secondary is the vibrant page colour and
+            // would swallow the field. border-strong is what identifies it.
+            backgroundColor: 'var(--color-surface-tertiary)',
+            borderColor: 'var(--color-border-strong)',
             color: 'var(--color-text-primary)',
           }}
           onFocus={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-glow)'}

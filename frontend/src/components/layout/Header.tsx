@@ -1,17 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Plane, Sun, Moon, Plus, LogOut, User } from 'lucide-react';
-import { useUIStore } from '../../store/uiStore';
+import { Plane, Plus, LogOut, User } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
-const THEME_OPTIONS = [
-  { value: 'light' as const, icon: Sun, label: 'Light' },
-  { value: 'dark' as const, icon: Moon, label: 'Dark' },
-];
-
 export default function Header() {
-  const theme = useUIStore((s) => s.theme);
-  const setTheme = useUIStore((s) => s.setTheme);
   const location = useLocation();
   const navigate = useNavigate();
   const authUser = useAuthStore((s) => s.user);
@@ -56,26 +48,6 @@ export default function Header() {
       </Link>
 
       <div className="flex items-center gap-4">
-        {/* Theme toggle pill */}
-        <div className="flex items-center rounded-full p-0.5"
-          style={{ backgroundColor: 'var(--color-surface-tertiary)' }}>
-          {THEME_OPTIONS.map(({ value, icon: Icon, label }) => (
-            <button
-              key={value}
-              onClick={() => setTheme(value)}
-              title={label}
-              className="p-1.5 rounded-full transition-all duration-200"
-              style={{
-                backgroundColor: theme === value ? 'var(--color-surface)' : 'transparent',
-                boxShadow: theme === value ? 'var(--shadow-sm)' : 'none',
-                color: theme === value ? 'var(--color-accent)' : 'var(--color-text-muted)',
-              }}
-            >
-              <Icon className="w-3.5 h-3.5" />
-            </button>
-          ))}
-        </div>
-
         {/* Nav links */}
         {isSignedIn && (
           <nav className="flex items-center gap-1">

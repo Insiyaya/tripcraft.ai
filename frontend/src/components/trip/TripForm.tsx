@@ -56,8 +56,10 @@ export default function TripForm({ onSubmit, isLoading }: Props) {
   };
 
   const inputStyle = {
-    backgroundColor: 'var(--color-surface-secondary)',
-    borderColor: 'var(--color-border)',
+    // Not surface-secondary: that is now the vibrant page colour, which would
+    // make every field disappear into the background.
+    backgroundColor: 'var(--color-surface-tertiary)',
+    borderColor: 'var(--color-border-strong)',
     color: 'var(--color-text-primary)',
   };
 

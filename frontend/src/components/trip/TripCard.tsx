@@ -31,10 +31,13 @@ export default function TripCard({ trip, onDelete }: Props) {
               : trip.status === 'generating'
               ? 'rgba(245, 158, 11, 0.1)'
               : 'var(--color-surface-tertiary)',
+            // Darker inks than the fill colours they sit on. Using #10b981 and
+            // #f59e0b as text over their own 10% tint measured 2.25:1 and
+            // 1.95:1 — effectively illegible. These are 6.80:1 and 6.43:1.
             color: trip.status === 'planned'
-              ? '#10b981'
+              ? '#065f46'
               : trip.status === 'generating'
-              ? '#f59e0b'
+              ? '#92400e'
               : 'var(--color-text-muted)',
           }}
         >
@@ -76,8 +79,8 @@ export default function TripCard({ trip, onDelete }: Props) {
             onClick={() => onDelete(trip._id)}
             className="px-3 py-2 rounded-lg text-sm transition-colors border"
             style={{
-              borderColor: 'rgba(239, 68, 68, 0.2)',
-              color: '#ef4444',
+              borderColor: 'rgba(185, 28, 28, 0.35)',
+              color: '#b91c1c',
             }}
           >
             <Trash2 className="w-4 h-4" />

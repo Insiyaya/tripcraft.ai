@@ -7,7 +7,6 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import TripsListPage from './pages/TripsListPage';
 import PlannerPage from './pages/PlannerPage';
-import { useUIStore } from './store/uiStore';
 import { useAuthStore } from './store/authStore';
 import { GOOGLE_CLIENT_ID } from './utils/constants';
 
@@ -28,16 +27,6 @@ const queryClient = new QueryClient({
 function MaybeGoogleProvider({ children }: { children: React.ReactNode }) {
   if (!GOOGLE_CLIENT_ID) return <>{children}</>;
   return <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>{children}</GoogleOAuthProvider>;
-}
-
-function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const theme = useUIStore((s) => s.theme);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
-
-  return <>{children}</>;
 }
 
 function AuthLoader({ children }: { children: React.ReactNode }) {
@@ -73,42 +62,40 @@ export default function App() {
   return (
     <MaybeGoogleProvider>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <AuthLoader>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route element={<MainLayout />}>
-                  <Route path="/" element={<HomePage />} />
-                  <Route
-                    path="/trips"
-                    element={
-                      <ProtectedRoute>
-                        <TripsListPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/planner"
-                    element={
-                      <ProtectedRoute>
-                        <PlannerPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/planner/:tripId"
-                    element={
-                      <ProtectedRoute>
-                        <PlannerPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                </Route>
-              </Routes>
-            </BrowserRouter>
-          </AuthLoader>
-        </ThemeProvider>
+        <AuthLoader>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route element={<MainLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route
+                  path="/trips"
+                  element={
+                    <ProtectedRoute>
+                      <TripsListPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/planner"
+                  element={
+                    <ProtectedRoute>
+                      <PlannerPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/planner/:tripId"
+                  element={
+                    <ProtectedRoute>
+                      <PlannerPage />
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </AuthLoader>
       </QueryClientProvider>
     </MaybeGoogleProvider>
   );

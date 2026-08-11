@@ -91,7 +91,7 @@ export default function DayDetailModal({ day, index, onClose, onViewOnMap }: Pro
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-1.5 rounded-lg transition-colors hover:bg-amber-100"
               style={{ color: 'var(--color-text-muted)' }}
             >
               <X className="w-5 h-5" />
